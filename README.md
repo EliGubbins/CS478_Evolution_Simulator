@@ -7,4 +7,6 @@ Evolution Simulator for CS478 - Software Development
 
  Andrew Forche  
 
- Dalton Knepp
+ Dalton Knepp  
+
+ Mathew Fulton
