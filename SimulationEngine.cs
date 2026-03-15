@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using EvolutionSimulator.Core.Environment;
+using EvolutionSimulator.Core.Entities;
 
 namespace EvolutionSimulator.Core
 {
@@ -20,6 +21,12 @@ namespace EvolutionSimulator.Core
         public SimulationEngine(float worldWidth, float worldHeight)
         {
             // Initialize the environment manager, population manager, and engine state.
+            EnvironmentManager = new EnvironmentManager(worldWidth, worldHeight);
+            // population manager initialization is not done yet
+            Initialize(10, 10, 50, 100);
+            CurrentStep = 0;
+            ElapsedTime = 0;
+
         }
 
         public void Initialize(
@@ -28,7 +35,8 @@ namespace EvolutionSimulator.Core
             float preyStartingEnergy,
             float predatorStartingEnergy)
         {
-            // Set up the first simulation state and seed the world.
+            //add entities to population manager
+            PopulationManager = new PopulationManager();
         }
 
         public void Step(float deltaTime)
@@ -41,17 +49,17 @@ namespace EvolutionSimulator.Core
 
         public void Start()
         {
-            // Mark the simulation as running.
+            IsRunning = true;
         }
 
         public void Stop()
         {
-            // Mark the simulation as stopped.
+            IsRunning = false;
         }
 
         public void Reset()
         {
-            // Reset the simulation to a clean starting state.
+            SimulationEngine newEngine = new SimulationEngine(EnvironmentManager.Width, EnvironmentManager.Height);
         }
     }
 }

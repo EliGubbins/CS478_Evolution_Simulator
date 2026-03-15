@@ -32,6 +32,10 @@ namespace EvolutionSimulator.Core.Environment
         public void RegenerateFood()
         {
             // Add new food to the environment according to regeneration rules.
+            float x;
+            float y;
+            (x, y) = GetRandomPosition();
+            FoodSources.Add(new Food(x, y));
         }
 
         public void RemoveConsumedFood()

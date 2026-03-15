@@ -16,7 +16,11 @@ namespace EvolutionSimulator.Core.Models
 
         public Food()
         {
-            // Initialize food with default values.
+            Id = Guid.NewGuid();
+            X = x;
+            Y = y;
+            NutritionValue = nutritionalValue;
+            IsConsumed = false;
         }
     }
 }
