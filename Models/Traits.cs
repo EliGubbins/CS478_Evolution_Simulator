@@ -24,5 +24,20 @@ namespace EvolutionSimulator.Core.Models
             // Return a deep copy of the traits object.
             throw new NotImplementedException();
         }
+
+        public void Mutate(float mutationRate)
+        {
+            if (Random.Shared.NextSingle() < mutationRate)
+                Speed += Random.Shared.NextSingle() * 0.5f -0.25f;
+
+            if (Random.Shared.NextSingle() < mutationRate)
+                Size += Random.Shared.NextSingle() * 0.5f -0.25f;
+
+            if (Random.Shared.NextSingle() < mutationRate)
+                Stamina += Random.Shared.NextSingle() * 0.5f -0.25f;
+                
+            if (Random.Shared.NextSingle() < mutationRate)
+                VisionRadius += Random.Shared.NextSingle() * 0.5f -0.25f;
+        }
     }
 }
