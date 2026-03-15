@@ -4,9 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EcosystemSimulator.Enviroment
+namespace EvolutionSimulator.Core.Models
 {
-    internal class Food
+    public class Food
     {
+        public Guid Id { get; set; }
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float NutritionValue { get; set; }
+        public bool IsConsumed { get; set; }
+
+        public Food()
+        {
+            // Initialize food with default values.
+        }
     }
 }
