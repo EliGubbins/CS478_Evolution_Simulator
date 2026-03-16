@@ -53,6 +53,9 @@ namespace EvolutionSimulator.Core.Entities
             if (!IsAlive)
                 return;
 
+            if (ReproductionCooldown > 0)
+                ReproductionCooldown -= deltaTime;
+
             Predator? predator = FindNearestPredator(populationManager);
             Food? food = FindNearestFood(environmentManager);
 

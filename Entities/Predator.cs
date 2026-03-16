@@ -39,17 +39,12 @@ namespace EvolutionSimulator.Core.Entities
             // - attempt reproduction
             if (!IsAlive)
                 return;
+            
+            if (ReproductionCooldown > 0)
+                ReproductionCooldown -= deltaTime;
 
-            Prey? prey = FindNearestPrey(populationManager);
-
-            // Dont't think this is needed for pred since they just eat prey
-            //Food? food = FindNearestFood(environmentManager);
-
-            // Does not need env manager since pred does not look for food
             DecideMovement(populationManager);
 
-            // We should try and catch prey instead
-            //TryEatFood(environmentManager);
             TryCatchPrey(populationManager);
 
             base.Update(environmentManager, populationManager, deltaTime);
@@ -71,8 +66,6 @@ namespace EvolutionSimulator.Core.Entities
 
         public void HuntPrey(Prey prey)
         {
-            // Should be good, might need more than just setting direction (escape score), but
-            // That might be able to be handled just exclusively in prey
             // Set movement direction toward a prey target.
             float dx = prey.X - X;
             float dy = prey.Y - Y;
@@ -92,6 +85,29 @@ namespace EvolutionSimulator.Core.Entities
         public void TryCatchPrey(PopulationManager populationManager)
         {
             // Attempt to catch nearby prey and gain energy on success.
+            Prey? prey = FindNearestPrey(populationManager);
+
+            if (prey == null)
+                return;
+            
+            float distance = DistanceTo(prey);
+
+            // TODO: determine what trait will effect the radius preds are willing to hunt
+            float catchRange = Traits.Size;
+
+            if (distance > catchRange)
+                return;
+
+            float catchChance = CalculateCatchChance(prey);
+
+            if (Random.Shared.NextSingle() < catchChance)
+            {
+                prey.Die();
+                Energy += prey.Energy * 0.8f;
+                // could use a fixed nutrition value later for better balancing
+                // I think in the long term though larger prey would provide more energy so
+                // we will need to factor in size for our formula
+            }
         }
 
         public override bool CanReproduce()
@@ -112,19 +128,81 @@ namespace EvolutionSimulator.Core.Entities
         public Predator CreateOffspring(float mutationRate)
         {
             // Create a new predator instance with inherited and possibly mutated traits.
-            throw new NotImplementedException();
+
+            // Copy traits from parent
+            Traits childTraits = Traits.Clone();
+
+            // Apply mutation
+            childTraits.Mutate(mutationRate);
+            
+            // Spawn near parent
+            float offsetX = Random.Shared.NextSingle() * 2 - 1;
+            float offsetY = Random.Shared.NextSingle() * 2 - 1;
+
+            float childX = X + offsetX;
+            float childY = Y + offsetY;
+
+            float childEnergy = Energy * 0.25f;
+
+            // Reduce Parent Energy
+            Energy *= 0.75f;
+
+            // Reset reproduction cooldown
+            ReproductionCooldown = 10;
+
+            return new Predator(childTraits, childX, childY, childEnergy);
         }
 
+        // TODO: calculate a prey score
+        // i.e. predators would prefer prey with lower energy of maybe smaller/larger size 
         public Prey? FindNearestPrey(PopulationManager populationManager)
         {
             // Return the nearest prey within relevant sensing range.
-            throw new NotImplementedException();
+            Prey? closest = null;
+            float closestDistance = float.MaxValue;
+
+            foreach (var prey in populationManager.PreyPopulation)
+            {
+                if (!prey.IsAlive)
+                    continue;
+                
+                float distance = DistanceTo(prey);
+
+                if (distance < closestDistance && distance <= Traits.VisionRadius)
+                {
+                    closest = prey;
+                    closestDistance = distance;
+                }
+            }
+
+            return closest;
         }
 
+        // TODO: This is pretty much identical to our prey function.
+        // Should make some more adjustments to differentiate the two
         public float CalculateCatchChance(Prey prey)
         {
             // Compute probability of catching prey based on predator and prey traits.
-            throw new NotImplementedException();
+
+            float predatorAdvantage = 
+                (Traits.Speed * 0.5f) +
+                (Traits.Stamina * 0.2f) +
+                (Traits.VisionRadius * 0.1f) +
+                (Traits.Size * 0.2f);
+            
+            float preyAdvantage = 
+                (prey.Traits.Speed * 0.5f) +
+                (prey.Traits.Stamina * 0.3f) +
+                (prey.Traits.Size * 0.2f);
+
+            float score = predatorAdvantage - predatorAdvantage;
+
+            float probability = 0.5f * (score * 0.5f);
+
+            // Clamp the result
+            probability = Math.Clamp(probability, 0.1f, 0.9f);
+
+            return probability;
         }
     }
 }
