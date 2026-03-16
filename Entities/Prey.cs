@@ -98,7 +98,7 @@ namespace EvolutionSimulator.Core.Entities
         {
             // Set movement direction toward a food source.
             float dx = food.X - X;
-            float dy = food.X - Y;
+            float dy = food.Y - Y;
 
             SetDirection(dx, dy);
         }
