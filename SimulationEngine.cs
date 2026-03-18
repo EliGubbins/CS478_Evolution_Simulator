@@ -14,7 +14,7 @@ namespace EvolutionSimulator.Core
         public EnvironmentManager EnvironmentManager { get; private set; }
         public PopulationManager PopulationManager { get; private set; }
 
-        public int CurrentStep { get; private set; }
+        public float CurrentStep { get; private set; }
         public float ElapsedTime { get; private set; }
         public bool IsRunning { get; private set; }
 
@@ -22,12 +22,13 @@ namespace EvolutionSimulator.Core
         {
             // Initialize the environment manager, population manager, and engine state.
             EnvironmentManager = new EnvironmentManager(worldWidth, worldHeight);
-            // population manager initialization is not done yet
+            PopulationManager = new PopulationManager();
             Initialize(10, 10, 50, 100);
             CurrentStep = 0;
             ElapsedTime = 0;
 
         }
+        
 
         public void Initialize(
             int initialPreyCount,
@@ -36,7 +37,7 @@ namespace EvolutionSimulator.Core
             float predatorStartingEnergy)
         {
             //add entities to population manager
-            PopulationManager = new PopulationManager();
+            
         }
 
         public void Step(float deltaTime)
@@ -45,6 +46,11 @@ namespace EvolutionSimulator.Core
             // - update environment
             // - update population
             // - increment counters
+            if (!IsRunning)
+                return;
+            EnvironmentManager.Update(deltaTime);
+            PopulationManager.Update(EnvironmentManager, deltaTime);
+            CurrentStep =+ deltaTime;
         }
 
         public void Start()
