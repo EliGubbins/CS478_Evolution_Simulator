@@ -37,7 +37,7 @@ namespace EvolutionSimulator.Core.Environment
             // This may include food regeneration and global environmental effects.
 
             SpawnCounter =+ deltaTime * FoodRegenerationRate;
-            for (float i = 0.49f; i<SpawnCounter; i++)
+            for (float i = .49f; i<SpawnCounter; i++)
                 if (GetAvailableFoodCount() < MaxFoodCount) { RegenerateFood(); }
                 SpawnCounter--;   
         }
@@ -51,9 +51,9 @@ namespace EvolutionSimulator.Core.Environment
             FoodSources.Add(new Food(x, y));
         }
 
-        public void RemoveConsumedFood(Food target)
+        public void RemoveConsumedFood()
         {
-            FoodSources.Remove(target);
+            FoodSources.RemoveAll(F => F.IsConsumed);
         }
 
         public Food? GetNearestAvailableFood(float x, float y, float maxRange)
