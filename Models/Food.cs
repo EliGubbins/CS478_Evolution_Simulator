@@ -14,7 +14,7 @@ namespace EvolutionSimulator.Core.Models
         public float NutritionValue { get; set; }
         public bool IsConsumed { get; set; }
 
-        public Food()
+        public Food(float x, float y, float nutritionalValue = 10)
         {
             Id = Guid.NewGuid();
             X = x;

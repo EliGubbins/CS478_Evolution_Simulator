@@ -17,16 +17,29 @@ namespace EvolutionSimulator.Core.Environment
 
         public float FoodRegenerationRate { get; set; }
         public int MaxFoodCount { get; set; }
+        public float SpawnCounter { get; set; } 
 
-        public EnvironmentManager(float width, float height)
+
+        public EnvironmentManager(float width = 1000, float height = 1000)
         {
-            // Initialize world dimensions, food collection, and environment settings.
+            Width = width;
+            Height = height;
+            FoodSources = new List<Food>();
+            FoodRegenerationRate = 0.5f; // Example: .5 per second
+            MaxFoodCount = 100;
+            SpawnCounter = 0;
+
         }
 
         public void Update(float deltaTime)
         {
             // Advance environment state for one simulation step.
             // This may include food regeneration and global environmental effects.
+
+            SpawnCounter =+ deltaTime * FoodRegenerationRate;
+            for (float i = 0.49f; i<SpawnCounter; i++)
+                if (GetAvailableFoodCount() < MaxFoodCount) { RegenerateFood(); }
+                SpawnCounter--;   
         }
 
         public void RegenerateFood()
@@ -38,9 +51,9 @@ namespace EvolutionSimulator.Core.Environment
             FoodSources.Add(new Food(x, y));
         }
 
-        public void RemoveConsumedFood()
+        public void RemoveConsumedFood(Food target)
         {
-            // Remove or recycle food items that have been consumed.
+            FoodSources.Remove(target);
         }
 
         public Food? GetNearestAvailableFood(float x, float y, float maxRange)
@@ -57,25 +70,28 @@ namespace EvolutionSimulator.Core.Environment
 
         public bool IsInsideBounds(float x, float y)
         {
-            // Return whether the given point is inside the world boundaries.
-            throw new NotImplementedException();
+            if (x < 0 || x > Width || y < 0 || y > Height)
+                return false;
+            return true;
         }
 
         public (float X, float Y) GetRandomPosition()
         {
-            // Return a random valid position inside the environment.
-            throw new NotImplementedException();
+            Random random = new Random();
+            float x = (float)(random.NextDouble() * Width);
+            float y = (float)(random.NextDouble() * Height);
+            return (x, y);
         }
 
         public void ClearAllFood()
         {
-            // Remove all food from the environment.
+            FoodSources.Clear();
         }
 
         public int GetAvailableFoodCount()
         {
-            // Return the number of food items currently available.
-            throw new NotImplementedException();
+            FoodSources.Count();
+            return FoodSources.Count;
         }
     }
 }
