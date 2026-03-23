@@ -16,9 +16,11 @@ namespace EvolutionSimulator.Core.Environment
         public float Height { get; private set; }
 
         public List<Food> FoodSources { get; private set; }
+        public List<TerrainRegion> TerrainRegions { get; private set; }
 
         public float FoodRegenerationRate { get; set; }
         public int MaxFoodCount { get; set; }
+        public float DefaultFoodNutritionValue { get; set; }
 
         public EnvironmentManager(float width, float height)
         {
@@ -26,8 +28,10 @@ namespace EvolutionSimulator.Core.Environment
             Width = width;
             Height = height;
             FoodSources = [];
+            TerrainRegions = [];
             FoodRegenerationRate = 0;
             MaxFoodCount = 100;
+            DefaultFoodNutritionValue = 10f;
         }
 
         public void Update(float deltaTime)
@@ -54,7 +58,13 @@ namespace EvolutionSimulator.Core.Environment
             float x;
             float y;
             (x, y) = GetRandomPosition();
-            FoodSources.Add(new Food(x, y));
+            FoodSources.Add(new Food(x, y, DefaultFoodNutritionValue));
+        }
+
+        public void SeedInitialFood(int count)
+        {
+            for (int i = 0; i < count && FoodSources.Count < MaxFoodCount; i++)
+                RegenerateFood();
         }
 
         public void RemoveConsumedFood()
@@ -128,6 +138,13 @@ namespace EvolutionSimulator.Core.Environment
         {
             // Remove all food from the environment.
             FoodSources.Clear();
+            foodRegenerationProgress = 0;
+        }
+
+        public void ClearAllTerrain()
+        {
+            // Terrain generation will come later; for now we just support resetting the collection.
+            TerrainRegions.Clear();
         }
 
         public int GetAvailableFoodCount()
