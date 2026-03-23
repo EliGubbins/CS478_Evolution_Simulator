@@ -204,11 +204,11 @@ namespace EvolutionSimulator.Core
 
                 Traits predatorTraits = new Traits
                 {
-                    Speed = 0,
-                    Size = 0,
-                    Stamina = 0,
-                    VisionRadius = 0,
-                    Metabolism = 0
+                    Speed = 5,
+                    Size = 6,
+                    Stamina = 3,
+                    VisionRadius = 6,
+                    Metabolism = 4
                 };
 
                 (float predatorRandomX, float predatorRandomY) = environmentManager.GetRandomPosition();

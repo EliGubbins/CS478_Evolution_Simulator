@@ -22,7 +22,7 @@ namespace EvolutionSimulator.Core
         {
             // Initialize the environment manager, population manager, and engine state.
             EnvironmentManager = new EnvironmentManager(worldWidth, worldHeight);
-            // population manager initialization is not done yet
+            // population manager initialization
             Initialize(10, 10, 50, 100);
             CurrentStep = 0;
             ElapsedTime = 0;
@@ -37,6 +37,13 @@ namespace EvolutionSimulator.Core
         {
             //add entities to population manager
             PopulationManager = new PopulationManager();
+
+            PopulationManager.SeedInitialPopulation(
+                initialPreyCount,
+                initialPredatorCount,
+                EnvironmentManager,
+                preyStartingEnergy,
+                predatorStartingEnergy);
         }
 
         public void Step(float deltaTime)
@@ -45,6 +52,11 @@ namespace EvolutionSimulator.Core
             // - update environment
             // - update population
             // - increment counters
+            EnvironmentManager.Update(deltaTime);
+            PopulationManager.Update(EnvironmentManager, deltaTime);
+            // Increment counters here
+            CurrentStep += 1;
+            ElapsedTime += deltaTime;
         }
 
         public void Start()

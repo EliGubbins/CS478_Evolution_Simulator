@@ -11,6 +11,13 @@ namespace EvolutionSimulator.Core.Models
         public float Speed { get; set; }
         public float Size { get; set; }
         public float Stamina { get; set; }
+        // TODO: I think we should split this into two values
+        // One value is a float angle which would dermine the degree cone the animal can see in
+        // i.e. float angle = 45 degrees
+        // Second value is a distance line that would determine the overall distance of their vision vector.
+        // i.e float VisionDistance = 10 (meters or just units for x and y)
+        // For this to work we will need to essentially calculate a cone (narrower but farther for predators,
+        //  and wider but shorter for prey)
         public float VisionRadius { get; set; }
         public float Metabolism { get; set; }
 
