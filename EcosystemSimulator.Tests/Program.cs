@@ -7,38 +7,71 @@ namespace EcosystemSimulator.Tests;
 
 internal static class Program
 {
-    private static readonly List<(string Name, Action Test)> Tests =
+    private static readonly TestSuite[] Suites =
     [
-        ("Traits.Clone returns a detached copy", TraitsCloneReturnsDetachedCopy),
-        ("SeedInitialPopulation clears and reseeds populations", SeedInitialPopulationClearsAndReseedsPopulations),
-        ("SeedInitialPopulation keeps prey and predator traits within baseline range", SeedInitialPopulationKeepsTraitsWithinBaselineRange),
-        ("Prey offspring inherits traits and updates parent state", PreyOffspringInheritsTraitsAndUpdatesParentState),
-        ("Predator offspring inherits traits and updates parent state", PredatorOffspringInheritsTraitsAndUpdatesParentState)
+        new(
+            "Traits",
+            [
+                new("Clone returns a detached copy", TraitsCloneReturnsDetachedCopy)
+            ]),
+        new(
+            "PopulationManager",
+            [
+                new("SeedInitialPopulation clears and reseeds populations", SeedInitialPopulationClearsAndReseedsPopulations),
+                new("SeedInitialPopulation keeps prey and predator traits within baseline range", SeedInitialPopulationKeepsTraitsWithinBaselineRange)
+            ]),
+        new(
+            "Prey",
+            [
+                new("CreateOffspring inherits traits and updates parent state", PreyOffspringInheritsTraitsAndUpdatesParentState)
+            ]),
+        new(
+            "Predator",
+            [
+                new("CreateOffspring inherits traits and updates parent state", PredatorOffspringInheritsTraitsAndUpdatesParentState)
+            ])
     ];
 
     private static int Main()
     {
-        int passed = 0;
+        int totalPassed = 0;
+        int totalTests = 0;
         List<string> failures = [];
 
-        foreach ((string name, Action test) in Tests)
+        foreach (TestSuite suite in Suites)
         {
-            try
+            Console.WriteLine($"{suite.Name} Tests");
+
+            foreach (TestCase test in suite.Tests)
             {
-                test();
-                Console.WriteLine($"PASS {name}");
-                passed += 1;
+                totalTests += 1;
+
+                try
+                {
+                    test.Run();
+                    Console.WriteLine($"  PASS {test.Name}");
+                    totalPassed += 1;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"  FAIL {test.Name}");
+                    Console.WriteLine($"    {ex.Message}");
+                    failures.Add($"{suite.Name}: {test.Name}");
+                }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"FAIL {name}");
-                Console.WriteLine($"  {ex.Message}");
-                failures.Add(name);
-            }
+
+            Console.WriteLine();
         }
 
-        Console.WriteLine();
-        Console.WriteLine($"{passed}/{Tests.Count} tests passed.");
+        Console.WriteLine($"Summary: {totalPassed}/{totalTests} tests passed.");
+
+        if (failures.Count > 0)
+        {
+            Console.WriteLine("Failed Tests:");
+
+            foreach (string failure in failures)
+                Console.WriteLine($"  {failure}");
+        }
 
         return failures.Count == 0 ? 0 : 1;
     }
@@ -138,6 +171,10 @@ internal static class Program
         Assert.True(parent.ReproductionCooldown > 0f, "Parent reproduction cooldown should be reset.");
     }
 }
+
+internal sealed record TestSuite(string Name, IReadOnlyList<TestCase> Tests);
+
+internal sealed record TestCase(string Name, Action Run);
 
 internal static class Assert
 {
