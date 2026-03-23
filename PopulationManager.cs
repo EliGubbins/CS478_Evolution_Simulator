@@ -15,8 +15,8 @@ namespace EvolutionSimulator.Core
     public class PopulationManager
     {
         private const float InitialTraitVariance = 2f;
-        private static readonly Traits DefaultPreyTraits = new(7f, 2.5f, 5f, 8f, 4f);
-        private static readonly Traits DefaultPredatorTraits = new(6f, 4.5f, 5f, 6.5f, 4f);
+        private static readonly Traits DefaultPreyTraits = new(6f, 2.5f, 6f, 7f, 4f);
+        private static readonly Traits DefaultPredatorTraits = new(8f, 4.5f, 4f, 9f, 4f);
 
         public float MutationRate { get; set; }
 

@@ -16,6 +16,9 @@ namespace EvolutionSimulator.Core.Entities
 {
     public class Prey : Organism
     {
+        private const float InteractionRangeFactor = 0.2f;
+        private const float MinimumInteractionRange = 1f;
+
         public float ReproductionCooldown { get; private set; }
 
         public Prey(Traits traits, float startX, float startY, float startingEnergy)
@@ -112,7 +115,9 @@ namespace EvolutionSimulator.Core.Entities
             // TODO: determine how distance should be calculated here
             // When should the prey go to the food or not, and what traits should determine that
             // Size is just a place holder comparison for the time being
-            if (distance < Traits.Size)
+            float interactionRange = MathF.Max(MinimumInteractionRange, Traits.VisionRadius * InteractionRangeFactor);
+
+            if (distance <= interactionRange)
             {
                 Energy += food.NutritionValue;
 
@@ -152,10 +157,10 @@ namespace EvolutionSimulator.Core.Entities
             float childX = X + offsetX;
             float childY = Y + offsetY;
 
-            float childEnergy = Energy * 0.25f;
+            float childEnergy = Energy * 0.5f;
 
             // Reduce Parent Energy
-            Energy *= 0.75f;
+            Energy *= 0.5f;
 
             // Reset reproduction cooldown
             ReproductionCooldown = 10;

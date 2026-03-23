@@ -66,7 +66,7 @@ namespace EvolutionSimulator.Core
                 InitialPreyCount: ReadInt("Initial prey count", 25),
                 InitialPredatorCount: ReadInt("Initial predator count", 8),
                 PreyStartingEnergy: ReadFloat("Prey starting energy", 50f),
-                PredatorStartingEnergy: ReadFloat("Predator starting energy", 100f),
+                PredatorStartingEnergy: ReadFloat("Predator starting energy", 60f),
                 MutationRate: ReadFloat("Mutation rate", 0.1f),
                 InitialFoodCount: ReadInt("Initial food count", 60),
                 FoodRegenerationRate: ReadFloat("Food regeneration rate", 3f),

@@ -5,6 +5,9 @@ namespace EvolutionSimulator.Core.Entities
 {
     public class Predator : Organism
     {
+        private const float CatchRangeFactor = 0.2f;
+        private const float MinimumCatchRange = 1f;
+
         public float ReproductionCooldown { get; private set; }
 
         public Predator(Traits traits, float startX, float startY, float startingEnergy)
@@ -77,7 +80,7 @@ namespace EvolutionSimulator.Core.Entities
             float distance = DistanceTo(prey);
 
             // TODO: determine what trait will effect the radius preds are willing to hunt
-            float catchRange = Traits.Size;
+            float catchRange = MathF.Max(MinimumCatchRange, Traits.VisionRadius * CatchRangeFactor);
 
             if (distance > catchRange)
                 return;
@@ -101,7 +104,7 @@ namespace EvolutionSimulator.Core.Entities
             if (!IsAlive)
                 return false;
 
-            if (Energy < 60)
+            if (Energy < 75)
                 return false;
             
             if (ReproductionCooldown > 0)
@@ -127,10 +130,10 @@ namespace EvolutionSimulator.Core.Entities
             float childX = X + offsetX;
             float childY = Y + offsetY;
 
-            float childEnergy = Energy * 0.25f;
+            float childEnergy = Energy * 0.5f;
 
             // Reduce Parent Energy
-            Energy *= 0.75f;
+            Energy *= 0.5f;
 
             // Reset reproduction cooldown
             ReproductionCooldown = 10;

@@ -21,8 +21,8 @@ public sealed class PredatorTests
         Assert.Equal(parent.Traits.Stamina, child.Traits.Stamina);
         Assert.Equal(parent.Traits.VisionRadius, child.Traits.VisionRadius);
         Assert.Equal(parent.Traits.Metabolism, child.Traits.Metabolism);
-        Assert.Equal(90f, parent.Energy);
-        Assert.Equal(30f, child.Energy);
+        Assert.Equal(60f, parent.Energy);
+        Assert.Equal(60f, child.Energy);
         Assert.True(parent.ReproductionCooldown > 0f);
     }
 

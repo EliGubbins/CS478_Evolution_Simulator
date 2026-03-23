@@ -30,7 +30,7 @@ namespace EvolutionSimulator.Core
             int initialPreyCount = 10,
             int initialPredatorCount = 10,
             float preyStartingEnergy = 50f,
-            float predatorStartingEnergy = 100f,
+            float predatorStartingEnergy = 60f,
             float mutationRate = 0.5f)
         {
             // Initialize the environment manager, population manager, and engine state.
