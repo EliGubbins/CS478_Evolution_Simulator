@@ -14,17 +14,21 @@ namespace EvolutionSimulator.Core
 {
     public class PopulationManager
     {
-        // Not sure this will be the best place for this longterm
-        public float mutationRate = 0.5f;
+        private const float InitialTraitVariance = 2f;
+        private static readonly Traits DefaultPreyTraits = new(7f, 2.5f, 5f, 8f, 4f);
+        private static readonly Traits DefaultPredatorTraits = new(6f, 4.5f, 5f, 6.5f, 4f);
+
+        public float MutationRate { get; set; }
 
         public List<Prey> PreyPopulation { get; private set; }
         public List<Predator> PredatorPopulation { get; private set; }
 
-        public PopulationManager()
+        public PopulationManager(float mutationRate = 0.5f)
         {
             // Initialize organism collections.
             PreyPopulation = [];
             PredatorPopulation = [];
+            MutationRate = mutationRate;
         }
 
         public void Update(EnvironmentManager environmentManager, float deltaTime)
@@ -100,14 +104,14 @@ namespace EvolutionSimulator.Core
             {
                 if (prey.IsAlive && prey.CanReproduce())
                     // Add new prey offspring to list
-                    preyOffspring.Add(prey.CreateOffspring(mutationRate));
+                    preyOffspring.Add(prey.CreateOffspring(MutationRate));
             }
 
             foreach (Predator predator in PredatorPopulation)
             {
                 if (predator.IsAlive && predator.CanReproduce())
                     // Add new predator offspring to list
-                    predatorOffspring.Add(predator.CreateOffspring(mutationRate));
+                    predatorOffspring.Add(predator.CreateOffspring(MutationRate));
             }
 
             // Add new offspring to population
@@ -172,24 +176,13 @@ namespace EvolutionSimulator.Core
             float predatorStartingEnergy)
         {
             // Create the initial prey and predator populations at random positions.
+            PreyPopulation.Clear();
+            PredatorPopulation.Clear();
+
             for (int i = 0; i < preyCount; i++)
             {
                 // Prey Population
-
-                // Need random yet reasonable traits here
-                // Should store avg value for these traits as a field and new trait
-                // will be a random + or - from the avg trait
-                // TODO: complete traits constructor. This is a very hack way of doing this
-                Traits preyTraits = new Traits
-                {
-                    // Need to tweak these values later, Not sure what starting balance will be best
-                    // Also we need variation they should not all be the same for starting values
-                    Speed = 7,
-                    Size = 3,
-                    Stamina = 5,
-                    VisionRadius = 7,
-                    Metabolism = 4
-                };
+                Traits preyTraits = CreateInitialTraits(DefaultPreyTraits);
 
                 // (This is for intialization, offspring spawn near their parents)
                 (float preyRandomX, float preyRandomY) = environmentManager.GetRandomPosition();
@@ -201,21 +194,29 @@ namespace EvolutionSimulator.Core
             for (int i = 0;i < predatorCount; i++)
             {
                  // Predator Population
-
-                Traits predatorTraits = new Traits
-                {
-                    Speed = 5,
-                    Size = 6,
-                    Stamina = 3,
-                    VisionRadius = 6,
-                    Metabolism = 4
-                };
+                Traits predatorTraits = CreateInitialTraits(DefaultPredatorTraits);
 
                 (float predatorRandomX, float predatorRandomY) = environmentManager.GetRandomPosition();
 
                 Predator newPredator = new Predator(predatorTraits, predatorRandomX, predatorRandomY, predatorStartingEnergy);
                 AddPredator(newPredator);
             }
+        }
+
+        private static Traits CreateInitialTraits(Traits baseline)
+        {
+            return new Traits(
+                VaryTrait(baseline.Speed),
+                VaryTrait(baseline.Size),
+                VaryTrait(baseline.Stamina),
+                VaryTrait(baseline.VisionRadius),
+                VaryTrait(baseline.Metabolism));
+        }
+
+        private static float VaryTrait(float baselineValue)
+        {
+            float offset = (Random.Shared.NextSingle() * 2f * InitialTraitVariance) - InitialTraitVariance;
+            return MathF.Max(0.1f, baselineValue + offset);
         }
     }
 }

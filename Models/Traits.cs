@@ -8,6 +8,8 @@ namespace EvolutionSimulator.Core.Models
 {
     public class Traits
     {
+        private const float MinimumTraitValue = 0.1f;
+
         public float Speed { get; set; }
         public float Size { get; set; }
         public float Stamina { get; set; }
@@ -22,29 +24,46 @@ namespace EvolutionSimulator.Core.Models
         public float Metabolism { get; set; }
 
         public Traits()
+            : this(1f, 1f, 1f, 1f, 1f)
         {
-            // Initialize default trait values.
+        }
+
+        public Traits(float speed, float size, float stamina, float visionRadius, float metabolism)
+        {
+            Speed = speed;
+            Size = size;
+            Stamina = stamina;
+            VisionRadius = visionRadius;
+            Metabolism = metabolism;
         }
 
         public Traits Clone()
         {
-            // Return a deep copy of the traits object.
-            throw new NotImplementedException();
+            return new Traits(Speed, Size, Stamina, VisionRadius, Metabolism);
         }
 
         public void Mutate(float mutationRate)
         {
             if (Random.Shared.NextSingle() < mutationRate)
-                Speed += Random.Shared.NextSingle() * 0.5f -0.25f;
+                Speed = MutateValue(Speed);
 
             if (Random.Shared.NextSingle() < mutationRate)
-                Size += Random.Shared.NextSingle() * 0.5f -0.25f;
+                Size = MutateValue(Size);
 
             if (Random.Shared.NextSingle() < mutationRate)
-                Stamina += Random.Shared.NextSingle() * 0.5f -0.25f;
+                Stamina = MutateValue(Stamina);
                 
             if (Random.Shared.NextSingle() < mutationRate)
-                VisionRadius += Random.Shared.NextSingle() * 0.5f -0.25f;
+                VisionRadius = MutateValue(VisionRadius);
+
+            if (Random.Shared.NextSingle() < mutationRate)
+                Metabolism = MutateValue(Metabolism);
+        }
+
+        private static float MutateValue(float value)
+        {
+            float mutatedValue = value + (Random.Shared.NextSingle() * 0.5f) - 0.25f;
+            return MathF.Max(MinimumTraitValue, mutatedValue);
         }
     }
 }

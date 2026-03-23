@@ -19,24 +19,8 @@ namespace EvolutionSimulator.Core.Entities
         public float ReproductionCooldown { get; private set; }
 
         public Prey(Traits traits, float startX, float startY, float startingEnergy)
+            : base(traits, startX, startY, startingEnergy)
         {
-            // Initialize prey-specific state and inherited organism properties.
-            Id = Guid.NewGuid();
-
-            Traits = traits;
-
-            X = startX;
-            Y = startY;
-
-            Energy = startingEnergy;
-
-            Age = 0;
-            IsAlive = true;
-
-            // TODO: May want to experiment with a random initial direction on creation
-            DirectionX = 0;
-            DirectionY = 0;
-
             ReproductionCooldown = 0;
         }
 
