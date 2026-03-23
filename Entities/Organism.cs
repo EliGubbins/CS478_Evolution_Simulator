@@ -23,6 +23,7 @@ namespace EvolutionSimulator.Core.Entities
             // Initialize shared organism fields.
             Id = Guid.NewGuid();
             IsAlive = true;
+            Traits = new Traits();
         }
 
         protected Organism(Traits traits, float startX, float startY, float startingEnergy)

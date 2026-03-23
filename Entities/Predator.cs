@@ -86,8 +86,9 @@ namespace EvolutionSimulator.Core.Entities
 
             if (Random.Shared.NextSingle() < catchChance)
             {
+                float preyEnergy = prey.Energy;
                 prey.Die();
-                Energy += prey.Energy * 0.8f;
+                Energy += preyEnergy * 0.8f;
                 // could use a fixed nutrition value later for better balancing
                 // I think in the long term though larger prey would provide more energy so
                 // we will need to factor in size for our formula
@@ -179,9 +180,9 @@ namespace EvolutionSimulator.Core.Entities
                 (prey.Traits.Stamina * 0.3f) +
                 (prey.Traits.Size * 0.2f);
 
-            float score = predatorAdvantage - predatorAdvantage;
+            float score = predatorAdvantage - preyAdvantage;
 
-            float probability = 0.5f * (score * 0.5f);
+            float probability = 0.5f + (score * 0.1f);
 
             // Clamp the result
             probability = Math.Clamp(probability, 0.1f, 0.9f);

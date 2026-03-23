@@ -76,7 +76,7 @@ namespace EvolutionSimulator.Core.Entities
         {
             // Set movement direction away from the predator.
             float dx = X - predator.X;
-            float dy = predator.Y;
+            float dy = Y - predator.Y;
 
             SetDirection(dx, dy);
         }
