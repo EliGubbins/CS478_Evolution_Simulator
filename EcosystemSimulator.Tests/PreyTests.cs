@@ -65,7 +65,7 @@ public sealed class PreyTests
     [Fact]
     public void CanReproduceRequiresLifeEnergyAndNoCooldown()
     {
-        Prey lowEnergyPrey = new(new Traits(7f, 2.5f, 5f, 8f, 4f), 0f, 0f, 59f);
+        Prey lowEnergyPrey = new(new Traits(7f, 2.5f, 5f, 8f, 4f), 0f, 0f, 54f);
         Prey reproducingPrey = new(new Traits(7f, 2.5f, 5f, 8f, 4f), 0f, 0f, 80f);
         Prey deadPrey = new(new Traits(7f, 2.5f, 5f, 8f, 4f), 0f, 0f, 80f);
 

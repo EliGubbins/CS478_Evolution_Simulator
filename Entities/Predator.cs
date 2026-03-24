@@ -5,7 +5,7 @@ namespace EvolutionSimulator.Core.Entities
 {
     public class Predator : Organism
     {
-        private const float CatchRangeFactor = 0.2f;
+        private const float CatchRangeFactor = 0.35f;
         private const float MinimumCatchRange = 1f;
 
         public float ReproductionCooldown { get; private set; }

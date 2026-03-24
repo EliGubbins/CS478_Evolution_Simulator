@@ -18,6 +18,8 @@ namespace EvolutionSimulator.Core.Entities
     {
         private const float InteractionRangeFactor = 0.2f;
         private const float MinimumInteractionRange = 1f;
+        private const float ReproductionEnergyThreshold = 55f;
+        private const float ReproductionCooldownDuration = 8f;
 
         public float ReproductionCooldown { get; private set; }
 
@@ -131,7 +133,7 @@ namespace EvolutionSimulator.Core.Entities
             if (!IsAlive)
                 return false;
 
-            if (Energy < 60)
+            if (Energy < ReproductionEnergyThreshold)
                 return false;
             
             if (ReproductionCooldown > 0)
@@ -163,7 +165,7 @@ namespace EvolutionSimulator.Core.Entities
             Energy *= 0.5f;
 
             // Reset reproduction cooldown
-            ReproductionCooldown = 10;
+            ReproductionCooldown = ReproductionCooldownDuration;
 
             return new Prey(childTraits, childX, childY, childEnergy);
         }
