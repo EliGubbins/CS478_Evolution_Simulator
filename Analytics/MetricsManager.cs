@@ -43,20 +43,28 @@ namespace EvolutionSimulator.Core.Analytics
             LivingPredatorCount = PopulationManager.GetLivingPredatorCount();
             FoodCount = EnvironmentManager.GetAvailableFoodCount();
             // Calculate average traits for prey and predators.
-             PreySpeedAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.Speed);
-             PredatorSpeedAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Speed);
-             PreySizeAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.Size);
-             PredatorSizeAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Size);
-             PreyStaminaAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.Stamina);
-             PredatorStaminaAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Stamina);
-             PreyVisionRadiusAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.VisionRadius);
-             PredatorVisionRadiusAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.VisionRadius);
-             PreyMetabolismAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.Metabolism);
-             PredatorMetabolismAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Metabolism);
+             PreySpeedAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Speed);
+             PredatorSpeedAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Speed);
+             PreySizeAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Size);
+             PredatorSizeAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Size);
+             PreyStaminaAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Stamina);
+             PredatorStaminaAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Stamina);
+             PreyVisionRadiusAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.VisionRadius);
+             PredatorVisionRadiusAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.VisionRadius);
+             PreyMetabolismAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Metabolism);
+             PredatorMetabolismAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Metabolism);
         }
 
-        public void ExportToCsv(string filePath)
+        public void ExportToCsv()
         {
+            string timeStamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+            string projectDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
+            string outputDir = Path.Combine(projectDir, "output");
+            string path = Path.Combine(outputDir, $"evolution_report_{timeStamp}.csv");
+
+            // Ensure the output directory exists
+            Directory.CreateDirectory(outputDir);
+
             var lines = new List<string>
             {
                 "Metric,Value",
@@ -75,9 +83,12 @@ namespace EvolutionSimulator.Core.Analytics
                 $"PredatorMetabolismAverage,{PredatorMetabolismAverage}"
             };
 
-            File.WriteAllLines(filePath, lines);
+            File.WriteAllLines(path, lines);
+            Console.WriteLine("Metrics data exported to " + path);
 
         }
 
+        private static int SafeAverage<T>(IEnumerable<T> source, Func<T, float> selector)
+            => source.Any() ? (int)source.Average(selector) : 0;
     }
 }
