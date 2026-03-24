@@ -14,12 +14,12 @@ namespace EvolutionSimulator.Core.Models
         public float NutritionValue { get; set; }
         public bool IsConsumed { get; set; }
 
-        public Food(float x, float y, float nutritionalValue = 10)
+        public Food(float x, float y, float nutritionValue = 10f)
         {
             Id = Guid.NewGuid();
             X = x;
             Y = y;
-            NutritionValue = nutritionalValue;
+            NutritionValue = nutritionValue;
             IsConsumed = false;
         }
     }

@@ -16,27 +16,14 @@ namespace EvolutionSimulator.Core.Entities
 {
     public class Prey : Organism
     {
+        private const float InteractionRangeFactor = 0.2f;
+        private const float MinimumInteractionRange = 1f;
+
         public float ReproductionCooldown { get; private set; }
 
         public Prey(Traits traits, float startX, float startY, float startingEnergy)
+            : base(traits, startX, startY, startingEnergy)
         {
-            // Initialize prey-specific state and inherited organism properties.
-            Id = Guid.NewGuid();
-
-            Traits = traits;
-
-            X = startX;
-            Y = startY;
-
-            Energy = startingEnergy;
-
-            Age = 0;
-            IsAlive = true;
-
-            // TODO: May want to experiment with a random initial direction on creation
-            DirectionX = 0;
-            DirectionY = 0;
-
             ReproductionCooldown = 0;
         }
 
@@ -92,7 +79,7 @@ namespace EvolutionSimulator.Core.Entities
         {
             // Set movement direction away from the predator.
             float dx = X - predator.X;
-            float dy = predator.Y;
+            float dy = Y - predator.Y;
 
             SetDirection(dx, dy);
         }
@@ -128,7 +115,9 @@ namespace EvolutionSimulator.Core.Entities
             // TODO: determine how distance should be calculated here
             // When should the prey go to the food or not, and what traits should determine that
             // Size is just a place holder comparison for the time being
-            if (distance < Traits.Size)
+            float interactionRange = MathF.Max(MinimumInteractionRange, Traits.VisionRadius * InteractionRangeFactor);
+
+            if (distance <= interactionRange)
             {
                 Energy += food.NutritionValue;
 
@@ -168,10 +157,10 @@ namespace EvolutionSimulator.Core.Entities
             float childX = X + offsetX;
             float childY = Y + offsetY;
 
-            float childEnergy = Energy * 0.25f;
+            float childEnergy = Energy * 0.5f;
 
             // Reduce Parent Energy
-            Energy *= 0.75f;
+            Energy *= 0.5f;
 
             // Reset reproduction cooldown
             ReproductionCooldown = 10;

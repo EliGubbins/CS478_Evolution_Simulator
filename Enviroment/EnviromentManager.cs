@@ -10,36 +10,47 @@ namespace EvolutionSimulator.Core.Environment
 {
     public class EnvironmentManager
     {
+        private float foodRegenerationProgress;
+
         public float Width { get; private set; }
         public float Height { get; private set; }
 
         public List<Food> FoodSources { get; private set; }
+        public List<TerrainRegion> TerrainRegions { get; private set; }
 
         public float FoodRegenerationRate { get; set; }
         public int MaxFoodCount { get; set; }
-        public float SpawnCounter { get; set; } 
+        public float DefaultFoodNutritionValue { get; set; }
 
 
         public EnvironmentManager(float width = 1000, float height = 1000)
         {
+            // Initialize world dimensions, food collection, and environment settings.
             Width = width;
             Height = height;
-            FoodSources = new List<Food>();
-            FoodRegenerationRate = 0.5f; // Example: .5 per second
+            FoodSources = [];
+            TerrainRegions = [];
+            FoodRegenerationRate = 0;
             MaxFoodCount = 100;
-            SpawnCounter = 0;
-
+            DefaultFoodNutritionValue = 10f;
         }
 
         public void Update(float deltaTime)
         {
             // Advance environment state for one simulation step.
             // This may include food regeneration and global environmental effects.
+            RemoveConsumedFood();
 
-            SpawnCounter =+ deltaTime * FoodRegenerationRate;
-            for (float i = .49f; i<SpawnCounter; i++)
-                if (GetAvailableFoodCount() < MaxFoodCount) { RegenerateFood(); }
-                SpawnCounter--;   
+            if (FoodRegenerationRate <= 0 || FoodSources.Count >= MaxFoodCount)
+                return;
+
+            foodRegenerationProgress += FoodRegenerationRate * deltaTime;
+
+            while (foodRegenerationProgress >= 1f && FoodSources.Count < MaxFoodCount)
+            {
+                RegenerateFood();
+                foodRegenerationProgress -= 1f;
+            }
         }
 
         public void RegenerateFood()
@@ -48,50 +59,99 @@ namespace EvolutionSimulator.Core.Environment
             float x;
             float y;
             (x, y) = GetRandomPosition();
-            FoodSources.Add(new Food(x, y));
+            FoodSources.Add(new Food(x, y, DefaultFoodNutritionValue));
+        }
+
+        public void SeedInitialFood(int count)
+        {
+            for (int i = 0; i < count && FoodSources.Count < MaxFoodCount; i++)
+                RegenerateFood();
         }
 
         public void RemoveConsumedFood()
         {
-            FoodSources.RemoveAll(F => F.IsConsumed);
+            // Remove or recycle food items that have been consumed.
+            FoodSources.RemoveAll(food => food.IsConsumed);
         }
 
         public Food? GetNearestAvailableFood(float x, float y, float maxRange)
         {
             // Return the closest unconsumed food within a given range.
-            throw new NotImplementedException();
+            Food? nearestFood = null;
+            float nearestDistance = maxRange;
+
+            foreach (Food food in FoodSources)
+            {
+                if (food.IsConsumed)
+                    continue;
+
+                float dx = food.X - x;
+                float dy = food.Y - y;
+                float distance = MathF.Sqrt((dx * dx) + (dy * dy));
+
+                if (distance <= nearestDistance)
+                {
+                    nearestDistance = distance;
+                    nearestFood = food;
+                }
+            }
+
+            return nearestFood;
         }
 
         public List<Food> GetFoodInRange(float x, float y, float radius)
         {
             // Return all available food sources within a radius.
-            throw new NotImplementedException();
+            List<Food> foodsInRange = [];
+
+            foreach (Food food in FoodSources)
+            {
+                if (food.IsConsumed)
+                    continue;
+
+                float dx = food.X - x;
+                float dy = food.Y - y;
+                float distance = MathF.Sqrt((dx * dx) + (dy * dy));
+
+                if (distance <= radius)
+                    foodsInRange.Add(food);
+            }
+
+            return foodsInRange;
         }
 
         public bool IsInsideBounds(float x, float y)
         {
-            if (x < 0 || x > Width || y < 0 || y > Height)
-                return false;
-            return true;
+            // Return whether the given point is inside the world boundaries.
+            return x >= 0 && x <= Width && y >= 0 && y <= Height;
         }
 
         public (float X, float Y) GetRandomPosition()
         {
-            Random random = new Random();
-            float x = (float)(random.NextDouble() * Width);
-            float y = (float)(random.NextDouble() * Height);
-            return (x, y);
+            // Return a random valid position inside the environment.
+            float randomX = Random.Shared.NextSingle() * Width;
+            float randomY = Random.Shared.NextSingle() * Height;
+
+            return (randomX, randomY);
         }
 
         public void ClearAllFood()
         {
+            // Remove all food from the environment.
             FoodSources.Clear();
+            foodRegenerationProgress = 0;
+        }
+
+        public void ClearAllTerrain()
+        {
+            // Terrain generation will come later; for now we just support resetting the collection.
+            TerrainRegions.Clear();
         }
 
         public int GetAvailableFoodCount()
         {
-            FoodSources.Count();
-            return FoodSources.Count;
+            // Return the number of food items currently available.
+            return FoodSources.Count(food => !food.IsConsumed);
         }
     }
 }

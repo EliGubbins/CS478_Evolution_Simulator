@@ -23,6 +23,21 @@ namespace EvolutionSimulator.Core.Entities
             // Initialize shared organism fields.
             Id = Guid.NewGuid();
             IsAlive = true;
+            Traits = new Traits();
+        }
+
+        protected Organism(Traits traits, float startX, float startY, float startingEnergy)
+            : this()
+        {
+            Traits = traits;
+            X = startX;
+            Y = startY;
+            Energy = startingEnergy;
+            Age = 0;
+
+            // TODO: May want to experiment with a random initial direction on creation
+            DirectionX = 0;
+            DirectionY = 0;
         }
 
         public virtual void Update(EnvironmentManager environmentManager, PopulationManager populationManager, float deltaTime)

@@ -14,19 +14,35 @@ namespace EvolutionSimulator.Core
         public EnvironmentManager EnvironmentManager { get; private set; }
         public PopulationManager PopulationManager { get; private set; }
 
-        public float CurrentStep { get; private set; }
+        public int InitialPreyCount { get; private set; }
+        public int InitialPredatorCount { get; private set; }
+        public float PreyStartingEnergy { get; private set; }
+        public float PredatorStartingEnergy { get; private set; }
+        public float MutationRate { get; private set; }
+
+        public int CurrentStep { get; private set; }
         public float ElapsedTime { get; private set; }
         public bool IsRunning { get; private set; }
 
-        public SimulationEngine(float worldWidth = 100, float worldHeight = 100)
+        public SimulationEngine(
+            float worldWidth,
+            float worldHeight,
+            int initialPreyCount = 10,
+            int initialPredatorCount = 10,
+            float preyStartingEnergy = 50f,
+            float predatorStartingEnergy = 60f,
+            float mutationRate = 0.5f)
         {
             // Initialize the environment manager, population manager, and engine state.
             EnvironmentManager = new EnvironmentManager(worldWidth, worldHeight);
-            PopulationManager = new PopulationManager();
-            Initialize(10, 10, 50, 100);
-            CurrentStep = 0;
-            ElapsedTime = 0;
+            PopulationManager = new PopulationManager(mutationRate);
 
+            Initialize(
+                initialPreyCount,
+                initialPredatorCount,
+                preyStartingEnergy,
+                predatorStartingEnergy,
+                mutationRate);
         }
         
 
@@ -34,10 +50,25 @@ namespace EvolutionSimulator.Core
             int initialPreyCount,
             int initialPredatorCount,
             float preyStartingEnergy,
-            float predatorStartingEnergy)
+            float predatorStartingEnergy,
+            float mutationRate = 0.5f)
         {
-            //add entities to population manager
-            
+            InitialPreyCount = initialPreyCount;
+            InitialPredatorCount = initialPredatorCount;
+            PreyStartingEnergy = preyStartingEnergy;
+            PredatorStartingEnergy = predatorStartingEnergy;
+            MutationRate = mutationRate;
+
+            ResetSimulationState();
+
+            PopulationManager.MutationRate = MutationRate;
+
+            PopulationManager.SeedInitialPopulation(
+                InitialPreyCount,
+                InitialPredatorCount,
+                EnvironmentManager,
+                PreyStartingEnergy,
+                PredatorStartingEnergy);
         }
 
         public void Step(float deltaTime)
@@ -48,9 +79,12 @@ namespace EvolutionSimulator.Core
             // - increment counters
             if (!IsRunning)
                 return;
+
             EnvironmentManager.Update(deltaTime);
             PopulationManager.Update(EnvironmentManager, deltaTime);
-            CurrentStep =+ deltaTime;
+            // Increment counters here
+            CurrentStep += 1;
+            ElapsedTime += deltaTime;
         }
 
         public void Start()
@@ -65,7 +99,20 @@ namespace EvolutionSimulator.Core
 
         public void Reset()
         {
-            SimulationEngine newEngine = new SimulationEngine(EnvironmentManager.Width, EnvironmentManager.Height);
+            Initialize(
+                InitialPreyCount,
+                InitialPredatorCount,
+                PreyStartingEnergy,
+                PredatorStartingEnergy,
+                MutationRate);
+        }
+
+        private void ResetSimulationState()
+        {
+            CurrentStep = 0;
+            ElapsedTime = 0;
+            IsRunning = false;
+            EnvironmentManager.ClearAllFood();
         }
     }
 }
