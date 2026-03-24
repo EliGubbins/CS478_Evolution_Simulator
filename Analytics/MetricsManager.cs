@@ -5,36 +5,79 @@ namespace EvolutionSimulator.Core.Analytics
 {
     public class MetricsManager
     {
-        public MetricsManager()
+        public PopulationManager PopulationManager { get; private set; }
+        public EnvironmentManager EnvironmentManager { get; private set; }
+        //metrics storage
+        ///////////////////////////////////////////////////////
+        public int LivingPreyCount { get; private set; }
+        public int LivingPredatorCount { get; private set; }
+        public int FoodCount { get; private set; }
+        //Speed Averages
+        public int PreySpeedAverage { get; private set; }
+        public int PredatorSpeedAverage { get; private set; }
+        //Size Averages
+        public int PreySizeAverage { get; private set; }
+        public int PredatorSizeAverage { get; private set; }
+        //Stamina Averages
+        public int PreyStaminaAverage { get; private set; }
+        public int PredatorStaminaAverage { get; private set; }
+        //Vision Radius Averages
+        public int PreyVisionRadiusAverage { get; private set; }
+        public int PredatorVisionRadiusAverage { get; private set; }
+        //Metabolism Averages
+        public int PreyMetabolismAverage { get; private set; }
+        public int PredatorMetabolismAverage { get; private set; }
+        ///////////////////////////////////////////////////////
+        public MetricsManager(SimulationEngine simulation)
         {
-            // Initialize metric storage collections.
+            PopulationManager = simulation.PopulationManager;
+            EnvironmentManager = simulation.EnvironmentManager;
+            
+            
         }
 
-        public void RecordStep(int currentStep, PopulationManager populationManager, EnvironmentManager environmentManager)
+        public void GetMetrics(PopulationManager populationManager, EnvironmentManager environmentManager)
         {
-            // Capture population counts, average traits, food counts, and other useful metrics.
-        }
-
-        public float GetAveragePreySpeed(PopulationManager populationManager)
-        {
-            // Calculate the average speed of the current prey population.
-            throw new NotImplementedException();
-        }
-
-        public float GetAveragePredatorSpeed(PopulationManager populationManager)
-        {
-            // Calculate the average speed of the current predator population.
-            throw new NotImplementedException();
+            // Record metrics for the current simulation step, such as population counts
+            LivingPreyCount = PopulationManager.GetLivingPreyCount();
+            LivingPredatorCount = PopulationManager.GetLivingPredatorCount();
+            FoodCount = EnvironmentManager.GetAvailableFoodCount();
+            // Calculate average traits for prey and predators.
+             PreySpeedAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.Speed);
+             PredatorSpeedAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Speed);
+             PreySizeAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.Size);
+             PredatorSizeAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Size);
+             PreyStaminaAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.Stamina);
+             PredatorStaminaAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Stamina);
+             PreyVisionRadiusAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.VisionRadius);
+             PredatorVisionRadiusAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.VisionRadius);
+             PreyMetabolismAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.Metabolism);
+             PredatorMetabolismAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Metabolism);
         }
 
         public void ExportToCsv(string filePath)
         {
-            // Write recorded metrics to a CSV file for graphing and analysis.
+            var lines = new List<string>
+            {
+                "Metric,Value",
+                $"LivingPreyCount,{LivingPreyCount}",
+                $"LivingPredatorCount,{LivingPredatorCount}",
+                $"FoodCount,{FoodCount}",
+                $"PreySpeedAverage,{PreySpeedAverage}",
+                $"PredatorSpeedAverage,{PredatorSpeedAverage}",
+                $"PreySizeAverage,{PreySizeAverage}",
+                $"PredatorSizeAverage,{PredatorSizeAverage}",
+                $"PreyStaminaAverage,{PreyStaminaAverage}",
+                $"PredatorStaminaAverage,{PredatorStaminaAverage}",
+                $"PreyVisionRadiusAverage,{PreyVisionRadiusAverage}",
+                $"PredatorVisionRadiusAverage,{PredatorVisionRadiusAverage}",
+                $"PreyMetabolismAverage,{PreyMetabolismAverage}",
+                $"PredatorMetabolismAverage,{PredatorMetabolismAverage}"
+            };
+
+            File.WriteAllLines(filePath, lines);
+
         }
 
-        public void Clear()
-        {
-            // Clear all recorded metrics.
-        }
     }
 }
