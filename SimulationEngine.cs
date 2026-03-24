@@ -18,7 +18,7 @@ namespace EvolutionSimulator.Core
         public float ElapsedTime { get; private set; }
         public bool IsRunning { get; private set; }
 
-        public SimulationEngine(float worldWidth, float worldHeight)
+        public SimulationEngine(float worldWidth = 100, float worldHeight = 100)
         {
             // Initialize the environment manager, population manager, and engine state.
             EnvironmentManager = new EnvironmentManager(worldWidth, worldHeight);
