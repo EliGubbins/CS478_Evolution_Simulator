@@ -8,6 +8,7 @@ namespace EvolutionSimulator.Core.Entities
         // Min and Max wonder duration in T(seconds)
         private const float MinimumWanderDuration = 4f;
         private const float MaximumWanderDuration = 9f;
+        private const float MinimumFacingMagnitude = 0.001f;
 
         public Guid Id { get; protected set; }
         public float X { get; protected set; }
@@ -21,6 +22,7 @@ namespace EvolutionSimulator.Core.Entities
         public bool IsAlive { get; protected set; }
 
         public Traits Traits { get; protected set; }
+        public abstract float VisionFieldOfViewDegrees { get; }
 
         protected float WanderTimeRemaining { get; set; }
 
@@ -152,6 +154,35 @@ namespace EvolutionSimulator.Core.Entities
             return (float)Math.Sqrt(dx * dx + dy *dy );
         }
 
+        public virtual bool CanSeePoint(float x, float y)
+        {
+            float distance = DistanceTo(x, y);
+
+            if (distance > Traits.VisionRadius)
+                return false;
+
+            if (distance == 0f)
+                return true;
+
+            float magnitudeSquared = (DirectionX * DirectionX) + (DirectionY * DirectionY);
+
+            if (magnitudeSquared < MinimumFacingMagnitude)
+                return true;
+
+            (float facingX, float facingY) = GetFacingVector();
+            float targetX = (x - X) / distance;
+            float targetY = (y - Y) / distance;
+            float dot = Math.Clamp((facingX * targetX) + (facingY * targetY), -1f, 1f);
+            float angleFromFacingDegrees = MathF.Acos(dot) * (180f / MathF.PI);
+
+            return angleFromFacingDegrees <= VisionFieldOfViewDegrees * 0.5f;
+        }
+
+        public virtual bool CanSee(Organism other)
+        {
+            return CanSeePoint(other.X, other.Y);
+        }
+
         protected virtual void ClampToWorldBounds(EnvironmentManager environmentManager)
         {
             // Keep this organism inside the environment bounds and bounce it back into the world.
@@ -207,6 +238,16 @@ namespace EvolutionSimulator.Core.Entities
             SetDirection(dx, dy);
             WanderTimeRemaining = Random.Shared.NextSingle() *
                 (MaximumWanderDuration - MinimumWanderDuration) + MinimumWanderDuration;
+        }
+
+        protected (float X, float Y) GetFacingVector()
+        {
+            float magnitudeSquared = (DirectionX * DirectionX) + (DirectionY * DirectionY);
+
+            if (magnitudeSquared < MinimumFacingMagnitude)
+                return (0f, -1f);
+
+            return (DirectionX, DirectionY);
         }
     }
 }

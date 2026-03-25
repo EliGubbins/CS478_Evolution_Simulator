@@ -126,7 +126,7 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
                     ? new RenderColor(palette.Predator.R, palette.Predator.G, palette.Predator.B, 55)
                     : new RenderColor(palette.Prey.R, palette.Prey.G, palette.Prey.B, 55);
 
-                DrawCircle(organism.X, organism.Y, organism.VisionRadius, visionColor, viewport, filled: false);
+                DrawVisionCone(organism, viewport, visionColor);
                 DrawCircle(organism.X, organism.Y, organism.Radius, bodyColor, viewport, filled: true);
                 DrawDirectionIndicator(organism, viewport, bodyColor);
             }
@@ -147,6 +147,44 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
             float endY = startY + (organism.DirectionY * directionLength);
 
             DrawLine(startX, startY, endX, endY, ToXnaColor(color), 2f);
+        }
+
+        private void DrawVisionCone(
+            OrganismRenderSnapshot organism,
+            WorldRenderViewport viewport,
+            RenderColor color)
+        {
+            if (pixelTexture is null)
+                return;
+
+            float startX = viewport.ToScreenX(organism.X);
+            float startY = viewport.ToScreenY(organism.Y);
+            float radius = viewport.ToScreenSize(organism.VisionRadius);
+            (float facingX, float facingY) = GetFacingVector(organism);
+            float facingAngle = MathF.Atan2(facingY, facingX);
+            float halfAngleRadians = MathHelper.ToRadians(organism.VisionFieldOfViewDegrees * 0.5f);
+            int segments = Math.Max(10, (int)(organism.VisionFieldOfViewDegrees / 8f));
+            Color lineColor = ToXnaColor(color);
+
+            Vector2 previousPoint = new(
+                startX + MathF.Cos(facingAngle - halfAngleRadians) * radius,
+                startY + MathF.Sin(facingAngle - halfAngleRadians) * radius);
+
+            DrawLine(startX, startY, previousPoint.X, previousPoint.Y, lineColor, 1.5f);
+
+            for (int i = 1; i <= segments; i++)
+            {
+                float progress = i / (float)segments;
+                float angle = facingAngle - halfAngleRadians + (progress * halfAngleRadians * 2f);
+                Vector2 nextPoint = new(
+                    startX + MathF.Cos(angle) * radius,
+                    startY + MathF.Sin(angle) * radius);
+
+                DrawLine(previousPoint.X, previousPoint.Y, nextPoint.X, nextPoint.Y, lineColor, 1.5f);
+                previousPoint = nextPoint;
+            }
+
+            DrawLine(startX, startY, previousPoint.X, previousPoint.Y, lineColor, 1.5f);
         }
 
         private void DrawLine(float startX, float startY, float endX, float endY, Color color, float thickness)
@@ -231,6 +269,16 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
         private static Color ToXnaColor(RenderColor color)
         {
             return new Color(color.R, color.G, color.B, color.A);
+        }
+
+        private static (float X, float Y) GetFacingVector(OrganismRenderSnapshot organism)
+        {
+            float magnitudeSquared = (organism.DirectionX * organism.DirectionX) + (organism.DirectionY * organism.DirectionY);
+
+            if (magnitudeSquared < 0.001f)
+                return (0f, -1f);
+
+            return (organism.DirectionX, organism.DirectionY);
         }
     }
 }

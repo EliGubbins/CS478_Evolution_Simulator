@@ -25,6 +25,7 @@ namespace EvolutionSimulator.Core.Rendering
         float DirectionY,
         float Radius,
         float VisionRadius,
+        float VisionFieldOfViewDegrees,
         float Energy,
         int Age,
         bool IsAlive);

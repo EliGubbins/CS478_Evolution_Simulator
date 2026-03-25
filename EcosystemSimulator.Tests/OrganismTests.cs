@@ -89,6 +89,17 @@ public sealed class OrganismTests
     }
 
     [Fact]
+    public void CanSeePointRequiresTargetToBeInsideVisionCone()
+    {
+        TestOrganism organism = CreateOrganism(startX: 0f, startY: 0f);
+        organism.SetDirection(1f, 0f);
+
+        Assert.True(organism.CanSeePointForTest(4f, 0f));
+        Assert.False(organism.CanSeePointForTest(0f, 4f));
+        Assert.False(organism.CanSeePointForTest(-4f, 0f));
+    }
+
+    [Fact]
     public void AgeOneStepIncrementsOnlyWhileAlive()
     {
         TestOrganism organism = CreateOrganism();

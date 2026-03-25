@@ -107,6 +107,7 @@ namespace EvolutionSimulator.Core.Rendering
                 organism.DirectionY,
                 organism.Traits.Size,
                 organism.Traits.VisionRadius,
+                organism.VisionFieldOfViewDegrees,
                 organism.Energy,
                 organism.Age,
                 organism.IsAlive);

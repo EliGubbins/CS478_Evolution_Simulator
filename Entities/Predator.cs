@@ -10,8 +10,10 @@ namespace EvolutionSimulator.Core.Entities
         private const float BasePreyEnergyEfficiency = 1.1f;
         private const float PreySizeEnergyBonusFactor = 0.25f;
         private const float MaxPreyEnergyEfficiency = 2.0f;
+        private const float PredatorVisionFieldOfViewDegrees = 110f;
 
         public float ReproductionCooldown { get; private set; }
+        public override float VisionFieldOfViewDegrees => PredatorVisionFieldOfViewDegrees;
 
         public Predator(Traits traits, float startX, float startY, float startingEnergy)
             : base(traits, startX, startY, startingEnergy)
@@ -157,7 +159,7 @@ namespace EvolutionSimulator.Core.Entities
                 
                 float distance = DistanceTo(prey);
 
-                if (distance < closestDistance && distance <= Traits.VisionRadius)
+                if (distance < closestDistance && CanSee(prey))
                 {
                     closest = prey;
                     closestDistance = distance;
