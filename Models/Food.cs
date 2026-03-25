@@ -14,9 +14,13 @@ namespace EvolutionSimulator.Core.Models
         public float NutritionValue { get; set; }
         public bool IsConsumed { get; set; }
 
-        public Food()
+        public Food(float x, float y, float nutritionValue = 10f)
         {
-            // Initialize food with default values.
+            Id = Guid.NewGuid();
+            X = x;
+            Y = y;
+            NutritionValue = nutritionValue;
+            IsConsumed = false;
         }
     }
 }
