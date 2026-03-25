@@ -5,8 +5,9 @@ namespace EvolutionSimulator.Core.Entities
 {
     public abstract class Organism
     {
-        private const float MinimumWanderDuration = 0.75f;
-        private const float MaximumWanderDuration = 1.75f;
+        // Min and Max wonder duration in T(seconds)
+        private const float MinimumWanderDuration = 4f;
+        private const float MaximumWanderDuration = 9f;
 
         public Guid Id { get; protected set; }
         public float X { get; protected set; }
@@ -153,15 +154,37 @@ namespace EvolutionSimulator.Core.Entities
 
         protected virtual void ClampToWorldBounds(EnvironmentManager environmentManager)
         {
-            // Keep this organism inside the environment bounds.
-            if (X < 0) X = 0;
-            if (Y < 0) Y = 0;
+            // Keep this organism inside the environment bounds and bounce it back into the world.
+            bool hitBoundary = false;
 
-            if (X > environmentManager.Width)
+            if (X < 0)
+            {
+                X = 0;
+                DirectionX = -DirectionX;
+                hitBoundary = true;
+            }
+            else if (X > environmentManager.Width)
+            {
                 X = environmentManager.Width;
+                DirectionX = -DirectionX;
+                hitBoundary = true;
+            }
 
-            if (Y > environmentManager.Height)
+            if (Y < 0)
+            {
+                Y = 0;
+                DirectionY = -DirectionY;
+                hitBoundary = true;
+            }
+            else if (Y > environmentManager.Height)
+            {
                 Y = environmentManager.Height;
+                DirectionY = -DirectionY;
+                hitBoundary = true;
+            }
+
+            if (hitBoundary)
+                WanderTimeRemaining = 0f;
         }
 
         protected void Wander(float deltaTime)

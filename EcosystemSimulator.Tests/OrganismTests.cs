@@ -56,6 +56,8 @@ public sealed class OrganismTests
         Assert.InRange(organism.Y, 0f, 100f);
         Assert.Equal(100f, organism.X);
         Assert.Equal(0f, organism.Y);
+        Assert.Equal(-0.707f, organism.DirectionX, 3);
+        Assert.Equal(0.707f, organism.DirectionY, 3);
     }
 
     [Fact]
@@ -70,7 +72,7 @@ public sealed class OrganismTests
     }
 
     [Fact]
-    public void WanderKeepsDirectionForShortDurationInsteadOfRerollingImmediately()
+    public void WanderKeepsDirectionForLongerDurationInsteadOfRerollingImmediately()
     {
         TestOrganism organism = CreateOrganism();
 
@@ -78,7 +80,9 @@ public sealed class OrganismTests
         float firstDirectionX = organism.DirectionX;
         float firstDirectionY = organism.DirectionY;
 
-        organism.WanderForTest(0.1f);
+        organism.WanderForTest(1f);
+        organism.WanderForTest(1f);
+        organism.WanderForTest(1f);
 
         Assert.Equal(firstDirectionX, organism.DirectionX);
         Assert.Equal(firstDirectionY, organism.DirectionY);
