@@ -22,7 +22,8 @@ namespace EvolutionSimulator.Core.Environment
         public int MaxFoodCount { get; set; }
         public float DefaultFoodNutritionValue { get; set; }
 
-        public EnvironmentManager(float width, float height)
+
+        public EnvironmentManager(float width = 1000, float height = 1000)
         {
             // Initialize world dimensions, food collection, and environment settings.
             Width = width;
