@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -9,10 +9,16 @@
 
   <ItemGroup>
     <Compile Remove="EcosystemSimulator.Tests\**\*.cs" />
+    <Compile Remove="EcosystemSimulator.Console\**\*.cs" />
+    <Compile Remove="EcosystemSimulator.MonoGame\**\*.cs" />
     <Compile Remove="bin\**\*.cs" />
     <Compile Remove="obj\**\*.cs" />
     <EmbeddedResource Remove="EcosystemSimulator.Tests\**" />
+    <EmbeddedResource Remove="EcosystemSimulator.Console\**" />
+    <EmbeddedResource Remove="EcosystemSimulator.MonoGame\**" />
     <None Remove="EcosystemSimulator.Tests\**" />
+    <None Remove="EcosystemSimulator.Console\**" />
+    <None Remove="EcosystemSimulator.MonoGame\**" />
   </ItemGroup>
 
 </Project>

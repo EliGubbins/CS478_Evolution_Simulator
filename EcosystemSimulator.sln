@@ -5,6 +5,10 @@ VisualStudioVersion = 17.14.36915.13 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcosystemSimulator", "EcosystemSimulator.csproj", "{9ADC97D0-F70F-434D-956E-AA75475C4005}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcosystemSimulator.Console", "EcosystemSimulator.Console\EcosystemSimulator.Console.csproj", "{2EF9F72B-E9E0-4AB7-AF00-308C34E53A70}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcosystemSimulator.MonoGame", "EcosystemSimulator.MonoGame\EcosystemSimulator.MonoGame.csproj", "{E56747CD-D63C-4BF7-89F6-B4EF1098709D}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcosystemSimulator.Tests", "EcosystemSimulator.Tests\EcosystemSimulator.Tests.csproj", "{C584FBE7-4E17-4B29-B5BC-C0E51B586E0A}"
 EndProject
 Global
@@ -17,6 +21,14 @@ Global
 		{9ADC97D0-F70F-434D-956E-AA75475C4005}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9ADC97D0-F70F-434D-956E-AA75475C4005}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9ADC97D0-F70F-434D-956E-AA75475C4005}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2EF9F72B-E9E0-4AB7-AF00-308C34E53A70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EF9F72B-E9E0-4AB7-AF00-308C34E53A70}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2EF9F72B-E9E0-4AB7-AF00-308C34E53A70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EF9F72B-E9E0-4AB7-AF00-308C34E53A70}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E56747CD-D63C-4BF7-89F6-B4EF1098709D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E56747CD-D63C-4BF7-89F6-B4EF1098709D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E56747CD-D63C-4BF7-89F6-B4EF1098709D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E56747CD-D63C-4BF7-89F6-B4EF1098709D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C584FBE7-4E17-4B29-B5BC-C0E51B586E0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C584FBE7-4E17-4B29-B5BC-C0E51B586E0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C584FBE7-4E17-4B29-B5BC-C0E51B586E0A}.Release|Any CPU.ActiveCfg = Release|Any CPU

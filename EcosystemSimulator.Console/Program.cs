@@ -1,4 +1,6 @@
-namespace EvolutionSimulator.Core
+using EvolutionSimulator.Core;
+
+namespace EvolutionSimulator.ConsoleHost
 {
     internal static class Program
     {
@@ -37,9 +39,7 @@ namespace EvolutionSimulator.Core
                     PrintSummary(engine);
 
                 if (engine.PopulationManager.GetLivingPreyCount() == 0 || engine.PopulationManager.GetLivingPredatorCount() == 0)
-                {
                     engine.Stop();
-                }
             }
 
             Console.WriteLine();
