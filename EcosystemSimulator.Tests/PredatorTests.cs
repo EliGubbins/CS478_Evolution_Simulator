@@ -76,4 +76,31 @@ public sealed class PredatorTests
         Assert.InRange(strongChance, 0.1f, 0.9f);
         Assert.InRange(weakChance, 0.1f, 0.9f);
     }
+
+    [Fact]
+    public void CalculateEnergyGainReturnsMoreThanPreyEnergy()
+    {
+        Predator predator = new(new Traits(8f, 4.5f, 4f, 9f, 4f), 0f, 0f, 60f);
+        Prey prey = new(new Traits(6f, 2.5f, 6f, 7f, 4f), 1f, 0f, 50f);
+
+        float energyGained = predator.CalculateEnergyGain(prey);
+
+        Assert.Equal(86.25f, energyGained);
+        Assert.True(energyGained > prey.Energy);
+    }
+
+    [Fact]
+    public void CalculateEnergyGainIncreasesWithPreySize()
+    {
+        Predator predator = new(new Traits(8f, 4.5f, 4f, 9f, 4f), 0f, 0f, 60f);
+        Prey smallPrey = new(new Traits(6f, 1f, 6f, 7f, 4f), 1f, 0f, 50f);
+        Prey largePrey = new(new Traits(6f, 4f, 6f, 7f, 4f), 1f, 0f, 50f);
+
+        float smallEnergyGain = predator.CalculateEnergyGain(smallPrey);
+        float largeEnergyGain = predator.CalculateEnergyGain(largePrey);
+
+        Assert.True(largeEnergyGain > smallEnergyGain);
+        Assert.Equal(67.5f, smallEnergyGain);
+        Assert.Equal(100f, largeEnergyGain);
+    }
 }

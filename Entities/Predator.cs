@@ -7,6 +7,9 @@ namespace EvolutionSimulator.Core.Entities
     {
         private const float CatchRangeFactor = 0.35f;
         private const float MinimumCatchRange = 1f;
+        private const float BasePreyEnergyEfficiency = 1.1f;
+        private const float PreySizeEnergyBonusFactor = 0.25f;
+        private const float MaxPreyEnergyEfficiency = 2.0f;
 
         public float ReproductionCooldown { get; private set; }
 
@@ -89,13 +92,20 @@ namespace EvolutionSimulator.Core.Entities
 
             if (Random.Shared.NextSingle() < catchChance)
             {
-                float preyEnergy = prey.Energy;
+                float energyGained = CalculateEnergyGain(prey);
                 prey.Die();
-                Energy += preyEnergy * 0.8f;
-                // could use a fixed nutrition value later for better balancing
-                // I think in the long term though larger prey would provide more energy so
-                // we will need to factor in size for our formula
+                Energy += energyGained;
             }
+        }
+
+        public float CalculateEnergyGain(Prey prey)
+        {
+            // Larger prey provide more usable energy, and predators now recover
+            // at least the prey's current energy to better offset their metabolism.
+            float energyEfficiency = BasePreyEnergyEfficiency + (prey.Traits.Size * PreySizeEnergyBonusFactor);
+            energyEfficiency = MathF.Min(MaxPreyEnergyEfficiency, energyEfficiency);
+
+            return prey.Energy * energyEfficiency;
         }
 
         public override bool CanReproduce()
