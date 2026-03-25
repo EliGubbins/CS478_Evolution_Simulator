@@ -5,6 +5,9 @@ namespace EvolutionSimulator.Core.Entities
 {
     public abstract class Organism
     {
+        private const float MinimumWanderDuration = 0.75f;
+        private const float MaximumWanderDuration = 1.75f;
+
         public Guid Id { get; protected set; }
         public float X { get; protected set; }
         public float Y { get; protected set; }
@@ -17,6 +20,8 @@ namespace EvolutionSimulator.Core.Entities
         public bool IsAlive { get; protected set; }
 
         public Traits Traits { get; protected set; }
+
+        protected float WanderTimeRemaining { get; set; }
 
         protected Organism()
         {
@@ -38,6 +43,7 @@ namespace EvolutionSimulator.Core.Entities
             // TODO: May want to experiment with a random initial direction on creation
             DirectionX = 0;
             DirectionY = 0;
+            WanderTimeRemaining = 0;
         }
 
         public virtual void Update(EnvironmentManager environmentManager, PopulationManager populationManager, float deltaTime)
@@ -156,6 +162,28 @@ namespace EvolutionSimulator.Core.Entities
 
             if (Y > environmentManager.Height)
                 Y = environmentManager.Height;
+        }
+
+        protected void Wander(float deltaTime)
+        {
+            WanderTimeRemaining -= deltaTime;
+
+            if (WanderTimeRemaining > 0f && (DirectionX != 0f || DirectionY != 0f))
+                return;
+
+            float dx;
+            float dy;
+
+            do
+            {
+                dx = (Random.Shared.NextSingle() * 2f) - 1f;
+                dy = (Random.Shared.NextSingle() * 2f) - 1f;
+            }
+            while (dx == 0f && dy == 0f);
+
+            SetDirection(dx, dy);
+            WanderTimeRemaining = Random.Shared.NextSingle() *
+                (MaximumWanderDuration - MinimumWanderDuration) + MinimumWanderDuration;
         }
     }
 }

@@ -33,14 +33,14 @@ namespace EvolutionSimulator.Core.Entities
             if (ReproductionCooldown > 0)
                 ReproductionCooldown -= deltaTime;
 
-            DecideMovement(populationManager);
+            DecideMovement(populationManager, deltaTime);
 
             TryCatchPrey(populationManager);
 
             base.Update(environmentManager, populationManager, deltaTime);
         }
 
-        public void DecideMovement(PopulationManager populationManager)
+        public void DecideMovement(PopulationManager populationManager, float deltaTime)
         {
             // Choose whether to hunt nearby prey or wander.
             Prey? prey = FindNearestPrey(populationManager);
@@ -51,7 +51,7 @@ namespace EvolutionSimulator.Core.Entities
                 return;
             }
 
-            Wander();
+            Wander(deltaTime);
         }
 
         public void HuntPrey(Prey prey)
@@ -59,15 +59,6 @@ namespace EvolutionSimulator.Core.Entities
             // Set movement direction toward a prey target.
             float dx = prey.X - X;
             float dy = prey.Y - Y;
-
-            SetDirection(dx, dy);
-        }
-
-        public void Wander()
-        {
-            // Set a semi-random movement direction when no prey is nearby.
-            float dx = Random.Shared.NextSingle() * 2 - 1;
-            float dy = Random.Shared.NextSingle() * 2 - 1;
 
             SetDirection(dx, dy);
         }

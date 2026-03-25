@@ -48,14 +48,14 @@ namespace EvolutionSimulator.Core.Entities
             Predator? predator = FindNearestPredator(populationManager);
             Food? food = FindNearestFood(environmentManager);
 
-            DecideMovement(environmentManager, populationManager);
+            DecideMovement(environmentManager, populationManager, deltaTime);
 
             TryEatFood(environmentManager);
 
             base.Update(environmentManager, populationManager, deltaTime);
         }
 
-        public void DecideMovement(EnvironmentManager environmentManager, PopulationManager populationManager)
+        public void DecideMovement(EnvironmentManager environmentManager, PopulationManager populationManager, float deltaTime)
         {
             // Choose whether to flee, forage, or wander based on nearby threats and food.
             Predator? predator = FindNearestPredator(populationManager);
@@ -74,7 +74,7 @@ namespace EvolutionSimulator.Core.Entities
                 return;
             }
 
-            Wander();
+            Wander(deltaTime);
         }
 
         public void FleeFromPredator(Predator predator)
@@ -91,15 +91,6 @@ namespace EvolutionSimulator.Core.Entities
             // Set movement direction toward a food source.
             float dx = food.X - X;
             float dy = food.Y - Y;
-
-            SetDirection(dx, dy);
-        }
-
-        public void Wander()
-        {
-            // Set a semi-random movement direction when no immediate stimulus exists.
-            float dx = Random.Shared.NextSingle() * 2 - 1;
-            float dy = Random.Shared.NextSingle() * 2 - 1;
 
             SetDirection(dx, dy);
         }

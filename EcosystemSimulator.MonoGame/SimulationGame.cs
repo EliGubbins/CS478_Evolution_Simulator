@@ -9,7 +9,10 @@ namespace EvolutionSimulator.MonoGameHost
 {
     public sealed class SimulationGame : Game
     {
-        private const float SimulationTimeScale = 8f;
+        private const float DefaultSimulationTimeScale = 1.5f;
+        private const float MinimumSimulationTimeScale = 0.25f;
+        private const float MaximumSimulationTimeScale = 8f;
+        private const float SimulationTimeScaleStep = 0.25f;
 
         private readonly GraphicsDeviceManager graphics;
         private readonly SimulationEngine engine;
@@ -18,6 +21,7 @@ namespace EvolutionSimulator.MonoGameHost
         private MonoGameRenderFrameRenderer? renderer;
         private WorldRenderViewport viewport;
         private KeyboardState previousKeyboardState;
+        private float simulationTimeScale;
 
         public SimulationGame()
         {
@@ -45,9 +49,12 @@ namespace EvolutionSimulator.MonoGameHost
             engine.EnvironmentManager.SeedInitialFood(100);
 
             renderBridge = new SimulationRenderBridge(engine);
+            simulationTimeScale = DefaultSimulationTimeScale;
             viewport = renderBridge.CreateViewport(
                 graphics.PreferredBackBufferWidth,
                 graphics.PreferredBackBufferHeight);
+
+            UpdateWindowTitle();
         }
 
         protected override void Initialize()
@@ -87,9 +94,15 @@ namespace EvolutionSimulator.MonoGameHost
                 engine.Start();
             }
 
+            if (IsSingleKeyPress(keyboardState, Keys.OemPlus) || IsSingleKeyPress(keyboardState, Keys.Add))
+                AdjustSimulationSpeed(SimulationTimeScaleStep);
+
+            if (IsSingleKeyPress(keyboardState, Keys.OemMinus) || IsSingleKeyPress(keyboardState, Keys.Subtract))
+                AdjustSimulationSpeed(-SimulationTimeScaleStep);
+
             if (engine.IsRunning)
             {
-                float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds * SimulationTimeScale;
+                float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds * simulationTimeScale;
                 engine.Step(deltaTime);
             }
 
@@ -124,6 +137,16 @@ namespace EvolutionSimulator.MonoGameHost
             return keyboardState.IsKeyDown(key) && previousKeyboardState.IsKeyUp(key);
         }
 
+        private void AdjustSimulationSpeed(float delta)
+        {
+            simulationTimeScale = Math.Clamp(
+                simulationTimeScale + delta,
+                MinimumSimulationTimeScale,
+                MaximumSimulationTimeScale);
+
+            UpdateWindowTitle();
+        }
+
         private void HandleClientSizeChanged(object? sender, EventArgs e)
         {
             viewport = renderBridge.CreateViewport(
@@ -131,6 +154,11 @@ namespace EvolutionSimulator.MonoGameHost
                 GraphicsDevice.PresentationParameters.BackBufferHeight);
 
             renderer?.Resize(viewport);
+        }
+
+        private void UpdateWindowTitle()
+        {
+            Window.Title = $"Evolution Simulator | Speed {simulationTimeScale:0.00}x | Space Pause | R Reset | +/- Speed";
         }
     }
 }

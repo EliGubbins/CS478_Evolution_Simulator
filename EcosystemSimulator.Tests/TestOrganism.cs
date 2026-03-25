@@ -17,6 +17,11 @@ internal sealed class TestOrganism : Organism
         ClampToWorldBounds(environmentManager);
     }
 
+    public void WanderForTest(float deltaTime)
+    {
+        Wander(deltaTime);
+    }
+
     public override void Update(EnvironmentManager environmentManager, PopulationManager populationManager, float deltaTime)
     {
         base.Update(environmentManager, populationManager, deltaTime);

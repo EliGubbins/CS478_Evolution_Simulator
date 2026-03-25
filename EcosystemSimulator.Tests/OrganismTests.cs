@@ -70,6 +70,21 @@ public sealed class OrganismTests
     }
 
     [Fact]
+    public void WanderKeepsDirectionForShortDurationInsteadOfRerollingImmediately()
+    {
+        TestOrganism organism = CreateOrganism();
+
+        organism.WanderForTest(0.1f);
+        float firstDirectionX = organism.DirectionX;
+        float firstDirectionY = organism.DirectionY;
+
+        organism.WanderForTest(0.1f);
+
+        Assert.Equal(firstDirectionX, organism.DirectionX);
+        Assert.Equal(firstDirectionY, organism.DirectionY);
+    }
+
+    [Fact]
     public void AgeOneStepIncrementsOnlyWhileAlive()
     {
         TestOrganism organism = CreateOrganism();
