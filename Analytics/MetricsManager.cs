@@ -71,16 +71,21 @@ namespace EvolutionSimulator.Core.Analytics
                 $"LivingPreyCount,{LivingPreyCount}",
                 $"LivingPredatorCount,{LivingPredatorCount}",
                 $"FoodCount,{FoodCount}",
+                "Prey, Averages",
                 $"PreySpeedAverage,{PreySpeedAverage}",
-                $"PredatorSpeedAverage,{PredatorSpeedAverage}",
                 $"PreySizeAverage,{PreySizeAverage}",
-                $"PredatorSizeAverage,{PredatorSizeAverage}",
                 $"PreyStaminaAverage,{PreyStaminaAverage}",
-                $"PredatorStaminaAverage,{PredatorStaminaAverage}",
                 $"PreyVisionRadiusAverage,{PreyVisionRadiusAverage}",
-                $"PredatorVisionRadiusAverage,{PredatorVisionRadiusAverage}",
                 $"PreyMetabolismAverage,{PreyMetabolismAverage}",
+                $"PredatorMetabolismAverage,{PredatorMetabolismAverage}",
+                "Predator, Averages",
+                $"PredatorSpeedAverage,{PredatorSpeedAverage}",
+                $"PredatorSizeAverage,{PredatorSizeAverage}",
+                $"PredatorStaminaAverage,{PredatorStaminaAverage}",
+                $"PredatorVisionRadiusAverage,{PredatorVisionRadiusAverage}",
                 $"PredatorMetabolismAverage,{PredatorMetabolismAverage}"
+
+
             };
 
             File.WriteAllLines(path, lines);

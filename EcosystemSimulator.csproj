@@ -15,4 +15,8 @@
     <None Remove="EcosystemSimulator.Tests\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="output\" />
+  </ItemGroup>
+
 </Project>
