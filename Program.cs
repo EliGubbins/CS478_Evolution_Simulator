@@ -56,7 +56,7 @@ namespace EvolutionSimulator.Core
                 Console.WriteLine("Reason: reached configured step limit.");
 
             PrintSummary(engine);
-            SaveMetrics(engine);
+            engine.MetricsManager.ExportToCsv();
         }
 
         private static SimulationSettings PromptForSettings()
@@ -156,11 +156,6 @@ namespace EvolutionSimulator.Core
             int MaxSteps,
             int OutputInterval);
 
-        public static void SaveMetrics(SimulationEngine engine)
-        {
-            MetricsManager metricsManager = new MetricsManager(engine);
-            metricsManager.GetMetrics(engine.PopulationManager, engine.EnvironmentManager);
-            metricsManager.ExportToCsv();
-        }
+        
     }
 }
