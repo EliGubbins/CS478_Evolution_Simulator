@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using EvolutionSimulator.Core.Environment;
 using EvolutionSimulator.Core.Entities;
+using EvolutionSimulator.Core.Analytics;
 
 namespace EvolutionSimulator.Core
 {
@@ -13,6 +14,7 @@ namespace EvolutionSimulator.Core
     {
         public EnvironmentManager EnvironmentManager { get; private set; }
         public PopulationManager PopulationManager { get; private set; }
+        public MetricsManager MetricsManager { get; private set; }
 
         public int InitialPreyCount { get; private set; }
         public int InitialPredatorCount { get; private set; }
@@ -36,6 +38,7 @@ namespace EvolutionSimulator.Core
             // Initialize the environment manager, population manager, and engine state.
             EnvironmentManager = new EnvironmentManager(worldWidth, worldHeight);
             PopulationManager = new PopulationManager(mutationRate);
+            MetricsManager = new MetricsManager(this);
 
             Initialize(
                 initialPreyCount,
@@ -85,6 +88,7 @@ namespace EvolutionSimulator.Core
             // Increment counters here
             CurrentStep += 1;
             ElapsedTime += deltaTime;
+            MetricsManager.GetMetrics(PopulationManager, EnvironmentManager);
         }
 
         public void Start()

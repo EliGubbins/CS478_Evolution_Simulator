@@ -1,3 +1,4 @@
+using EcosystemSimulator.Analytics;
 using EvolutionSimulator.Core.Analytics;
 using System.Net.NetworkInformation;
 
@@ -55,8 +56,11 @@ namespace EvolutionSimulator.Core
             else if (engine.CurrentStep >= settings.MaxSteps)
                 Console.WriteLine("Reason: reached configured step limit.");
 
+            //results 
             PrintSummary(engine);
-            SaveMetrics(engine);
+            engine.MetricsManager.ExportToCsv();
+            var graphs = new Graphs(engine);
+            graphs.CreateAllGraphs();
         }
 
         private static SimulationSettings PromptForSettings()
@@ -156,11 +160,6 @@ namespace EvolutionSimulator.Core
             int MaxSteps,
             int OutputInterval);
 
-        public static void SaveMetrics(SimulationEngine engine)
-        {
-            MetricsManager metricsManager = new MetricsManager(engine);
-            metricsManager.GetMetrics(engine.PopulationManager, engine.EnvironmentManager);
-            metricsManager.ExportToCsv();
-        }
+
     }
 }
