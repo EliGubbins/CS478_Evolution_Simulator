@@ -106,7 +106,7 @@ namespace EvolutionSimulator.Core.Rendering
                 organism.DirectionX,
                 organism.DirectionY,
                 organism.Traits.Size,
-                organism.Traits.VisionRadius,
+                organism.Traits.VisionDistance,
                 organism.VisionFieldOfViewDegrees,
                 organism.Energy,
                 organism.Age,

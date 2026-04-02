@@ -110,7 +110,7 @@ namespace EvolutionSimulator.Core.Entities
             // TODO: determine how distance should be calculated here
             // When should the prey go to the food or not, and what traits should determine that
             // Size is just a place holder comparison for the time being
-            float interactionRange = MathF.Max(MinimumInteractionRange, Traits.VisionRadius * InteractionRangeFactor);
+            float interactionRange = MathF.Max(MinimumInteractionRange, Traits.VisionDistance * InteractionRangeFactor);
 
             if (distance <= interactionRange)
             {

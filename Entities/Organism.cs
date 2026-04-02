@@ -158,7 +158,7 @@ namespace EvolutionSimulator.Core.Entities
         {
             float distance = DistanceTo(x, y);
 
-            if (distance > Traits.VisionRadius)
+            if (distance > Traits.VisionDistance)
                 return false;
 
             if (distance == 0f)

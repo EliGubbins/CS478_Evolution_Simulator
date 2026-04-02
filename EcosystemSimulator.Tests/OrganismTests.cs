@@ -114,7 +114,7 @@ public sealed class OrganismTests
     private static TestOrganism CreateOrganism(float startX = 10f, float startY = 10f, float startingEnergy = 20f)
     {
         return new TestOrganism(
-            new Traits(speed: 2f, size: 1f, stamina: 3f, visionRadius: 5f, metabolism: 4f),
+            new Traits(speed: 2f, size: 1f, stamina: 3f, visionDistance: 5f, metabolism: 4f),
             startX,
             startY,
             startingEnergy);

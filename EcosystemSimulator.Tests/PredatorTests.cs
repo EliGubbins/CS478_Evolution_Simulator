@@ -19,7 +19,7 @@ public sealed class PredatorTests
         Assert.Equal(parent.Traits.Speed, child.Traits.Speed);
         Assert.Equal(parent.Traits.Size, child.Traits.Size);
         Assert.Equal(parent.Traits.Stamina, child.Traits.Stamina);
-        Assert.Equal(parent.Traits.VisionRadius, child.Traits.VisionRadius);
+        Assert.Equal(parent.Traits.VisionDistance, child.Traits.VisionDistance);
         Assert.Equal(parent.Traits.Metabolism, child.Traits.Metabolism);
         Assert.Equal(60f, parent.Energy);
         Assert.Equal(60f, child.Energy);

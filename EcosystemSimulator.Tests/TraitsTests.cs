@@ -17,7 +17,7 @@ public sealed class TraitsTests
         Assert.Equal(7f, original.Speed);
         Assert.Equal(original.Size, clone.Size);
         Assert.Equal(original.Stamina, clone.Stamina);
-        Assert.Equal(original.VisionRadius, clone.VisionRadius);
+        Assert.Equal(original.VisionDistance, clone.VisionDistance);
         Assert.Equal(original.Metabolism, clone.Metabolism);
     }
 }

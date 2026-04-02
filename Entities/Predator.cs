@@ -76,7 +76,7 @@ namespace EvolutionSimulator.Core.Entities
             float distance = DistanceTo(prey);
 
             // TODO: determine what trait will effect the radius preds are willing to hunt
-            float catchRange = MathF.Max(MinimumCatchRange, Traits.VisionRadius * CatchRangeFactor);
+            float catchRange = MathF.Max(MinimumCatchRange, Traits.VisionDistance * CatchRangeFactor);
 
             if (distance > catchRange)
                 return;
@@ -178,7 +178,7 @@ namespace EvolutionSimulator.Core.Entities
             float predatorAdvantage = 
                 (Traits.Speed * 0.5f) +
                 (Traits.Stamina * 0.2f) +
-                (Traits.VisionRadius * 0.1f) +
+                (Traits.VisionDistance * 0.1f) +
                 (Traits.Size * 0.2f);
             
             float preyAdvantage = 

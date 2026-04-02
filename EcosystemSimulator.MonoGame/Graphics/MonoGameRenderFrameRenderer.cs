@@ -159,7 +159,7 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
 
             float startX = viewport.ToScreenX(organism.X);
             float startY = viewport.ToScreenY(organism.Y);
-            float radius = viewport.ToScreenSize(organism.VisionRadius);
+            float radius = viewport.ToScreenSize(organism.VisionDistance);
             (float facingX, float facingY) = GetFacingVector(organism);
             float facingAngle = MathF.Atan2(facingY, facingX);
             float halfAngleRadians = MathHelper.ToRadians(organism.VisionFieldOfViewDegrees * 0.5f);

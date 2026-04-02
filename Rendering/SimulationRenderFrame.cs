@@ -24,7 +24,7 @@ namespace EvolutionSimulator.Core.Rendering
         float DirectionX,
         float DirectionY,
         float Radius,
-        float VisionRadius,
+        float VisionDistance,
         float VisionFieldOfViewDegrees,
         float Energy,
         int Age,

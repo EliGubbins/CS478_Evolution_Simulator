@@ -21,9 +21,9 @@ namespace EvolutionSimulator.Core.Analytics
         //Stamina Averages
         public int PreyStaminaAverage { get; private set; }
         public int PredatorStaminaAverage { get; private set; }
-        //Vision Radius Averages
-        public int PreyVisionRadiusAverage { get; private set; }
-        public int PredatorVisionRadiusAverage { get; private set; }
+        //Vision Distance Averages
+        public int PreyVisionDistanceAverage { get; private set; }
+        public int PredatorVisionDistanceAverage { get; private set; }
         //Metabolism Averages
         public int PreyMetabolismAverage { get; private set; }
         public int PredatorMetabolismAverage { get; private set; }
@@ -49,8 +49,8 @@ namespace EvolutionSimulator.Core.Analytics
              PredatorSizeAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Size);
              PreyStaminaAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.Stamina);
              PredatorStaminaAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Stamina);
-             PreyVisionRadiusAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.VisionRadius);
-             PredatorVisionRadiusAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.VisionRadius);
+             PreyVisionDistanceAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.VisionDistance);
+             PredatorVisionDistanceAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.VisionDistance);
              PreyMetabolismAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.Metabolism);
              PredatorMetabolismAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Metabolism);
         }
@@ -69,8 +69,8 @@ namespace EvolutionSimulator.Core.Analytics
                 $"PredatorSizeAverage,{PredatorSizeAverage}",
                 $"PreyStaminaAverage,{PreyStaminaAverage}",
                 $"PredatorStaminaAverage,{PredatorStaminaAverage}",
-                $"PreyVisionRadiusAverage,{PreyVisionRadiusAverage}",
-                $"PredatorVisionRadiusAverage,{PredatorVisionRadiusAverage}",
+                $"PreyVisionDistanceAverage,{PreyVisionDistanceAverage}",
+                $"PredatorVisionDistanceAverage,{PredatorVisionDistanceAverage}",
                 $"PreyMetabolismAverage,{PreyMetabolismAverage}",
                 $"PredatorMetabolismAverage,{PredatorMetabolismAverage}"
             };
