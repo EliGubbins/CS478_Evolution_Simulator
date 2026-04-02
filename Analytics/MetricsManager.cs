@@ -5,79 +5,102 @@ namespace EvolutionSimulator.Core.Analytics
 {
     public class MetricsManager
     {
+        public string path { get; private set; }
         public PopulationManager PopulationManager { get; private set; }
         public EnvironmentManager EnvironmentManager { get; private set; }
-        //metrics storage
+
+        // metrics storage
         ///////////////////////////////////////////////////////
         public int LivingPreyCount { get; private set; }
         public int LivingPredatorCount { get; private set; }
         public int FoodCount { get; private set; }
-        //Speed Averages
+        // Speed averages
         public int PreySpeedAverage { get; private set; }
         public int PredatorSpeedAverage { get; private set; }
-        //Size Averages
+        // Size averages
         public int PreySizeAverage { get; private set; }
         public int PredatorSizeAverage { get; private set; }
-        //Stamina Averages
+        // Stamina averages
         public int PreyStaminaAverage { get; private set; }
         public int PredatorStaminaAverage { get; private set; }
-        //Vision Distance Averages
+        // Vision distance averages
         public int PreyVisionDistanceAverage { get; private set; }
         public int PredatorVisionDistanceAverage { get; private set; }
-        //Metabolism Averages
+        // Metabolism averages
         public int PreyMetabolismAverage { get; private set; }
         public int PredatorMetabolismAverage { get; private set; }
         ///////////////////////////////////////////////////////
+
+        private int _step;
+        public readonly List<string> _rows = new();
+
         public MetricsManager(SimulationEngine simulation)
         {
             PopulationManager = simulation.PopulationManager;
             EnvironmentManager = simulation.EnvironmentManager;
-            
-            
+
+            string timeStamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+            string projectDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
+            string outputDir = Path.Combine(projectDir, "output");
+            string reportsDir = Path.Combine(outputDir, $"evolution_report_{timeStamp}");
+            Directory.CreateDirectory(reportsDir);
+
+            path = Path.Combine(reportsDir, "metrics.csv");
+
+            _step = 0;
         }
 
         public void GetMetrics(PopulationManager populationManager, EnvironmentManager environmentManager)
         {
-            // Record metrics for the current simulation step, such as population counts
+            _step++;
+
             LivingPreyCount = PopulationManager.GetLivingPreyCount();
             LivingPredatorCount = PopulationManager.GetLivingPredatorCount();
             FoodCount = EnvironmentManager.GetAvailableFoodCount();
-            // Calculate average traits for prey and predators.
-             PreySpeedAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.Speed);
-             PredatorSpeedAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Speed);
-             PreySizeAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.Size);
-             PredatorSizeAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Size);
-             PreyStaminaAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.Stamina);
-             PredatorStaminaAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Stamina);
-             PreyVisionDistanceAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.VisionDistance);
-             PredatorVisionDistanceAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.VisionDistance);
-             PreyMetabolismAverage = (int)PopulationManager.PreyPopulation.Average(p => p.Traits.Metabolism);
-             PredatorMetabolismAverage = (int)PopulationManager.PredatorPopulation.Average(p => p.Traits.Metabolism);
+
+            PreySpeedAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Speed);
+            PredatorSpeedAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Speed);
+            PreySizeAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Size);
+            PredatorSizeAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Size);
+            PreyStaminaAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Stamina);
+            PredatorStaminaAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Stamina);
+            PreyVisionDistanceAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.VisionDistance);
+            PredatorVisionDistanceAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.VisionDistance);
+            PreyMetabolismAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Metabolism);
+            PredatorMetabolismAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Metabolism);
+
+            _rows.Add(string.Join(",",
+                _step,
+                LivingPreyCount, LivingPredatorCount, FoodCount,
+                PreySpeedAverage, PredatorSpeedAverage,
+                PreySizeAverage, PredatorSizeAverage,
+                PreyStaminaAverage, PredatorStaminaAverage,
+                PreyVisionDistanceAverage, PredatorVisionDistanceAverage,
+                PreyMetabolismAverage, PredatorMetabolismAverage));
         }
 
-        public void ExportToCsv(string filePath)
+        public void ExportToCsv()
         {
-            var lines = new List<string>
+            string header =
+                "Step,LivingPreyCount,LivingPredatorCount,FoodCount," +
+                "PreySpeedAvg,PredatorSpeedAvg," +
+                "PreySizeAvg,PredatorSizeAvg," +
+                "PreyStaminaAvg,PredatorStaminaAvg," +
+                "PreyVisionDistanceAvg,PredatorVisionDistanceAvg," +
+                "PreyMetabolismAvg,PredatorMetabolismAvg";
+
+            using var writer = new StreamWriter(path, false);
+            writer.WriteLine(header);
+
+            foreach (var row in _rows)
             {
-                "Metric,Value",
-                $"LivingPreyCount,{LivingPreyCount}",
-                $"LivingPredatorCount,{LivingPredatorCount}",
-                $"FoodCount,{FoodCount}",
-                $"PreySpeedAverage,{PreySpeedAverage}",
-                $"PredatorSpeedAverage,{PredatorSpeedAverage}",
-                $"PreySizeAverage,{PreySizeAverage}",
-                $"PredatorSizeAverage,{PredatorSizeAverage}",
-                $"PreyStaminaAverage,{PreyStaminaAverage}",
-                $"PredatorStaminaAverage,{PredatorStaminaAverage}",
-                $"PreyVisionDistanceAverage,{PreyVisionDistanceAverage}",
-                $"PredatorVisionDistanceAverage,{PredatorVisionDistanceAverage}",
-                $"PreyMetabolismAverage,{PreyMetabolismAverage}",
-                $"PredatorMetabolismAverage,{PredatorMetabolismAverage}"
-            };
+                writer.WriteLine(row);
+            }
 
-            File.WriteAllLines(filePath, lines);
-
+            Console.WriteLine("Metrics data exported to " + path);
         }
 
+        private static int SafeAverage<T>(IEnumerable<T> source, Func<T, float> selector)
+            => source.Any() ? (int)source.Average(selector) : 0;
     }
 }
