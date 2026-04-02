@@ -209,7 +209,7 @@ namespace EvolutionSimulator.Core
                 VaryTrait(baseline.Speed),
                 VaryTrait(baseline.Size),
                 VaryTrait(baseline.Stamina),
-                VaryTrait(baseline.VisionRadius),
+                VaryTrait(baseline.VisionDistance),
                 VaryTrait(baseline.Metabolism));
         }
 

@@ -8,27 +8,29 @@ namespace EvolutionSimulator.Core.Analytics
         public string path { get; private set; }
         public PopulationManager PopulationManager { get; private set; }
         public EnvironmentManager EnvironmentManager { get; private set; }
-        //metrics storage
+
+        // metrics storage
         ///////////////////////////////////////////////////////
         public int LivingPreyCount { get; private set; }
         public int LivingPredatorCount { get; private set; }
         public int FoodCount { get; private set; }
-        //Speed Averages
+        // Speed averages
         public int PreySpeedAverage { get; private set; }
         public int PredatorSpeedAverage { get; private set; }
-        //Size Averages
+        // Size averages
         public int PreySizeAverage { get; private set; }
         public int PredatorSizeAverage { get; private set; }
-        //Stamina Averages
+        // Stamina averages
         public int PreyStaminaAverage { get; private set; }
         public int PredatorStaminaAverage { get; private set; }
-        //Vision Radius Averages
-        public int PreyVisionRadiusAverage { get; private set; }
-        public int PredatorVisionRadiusAverage { get; private set; }
-        //Metabolism Averages
+        // Vision distance averages
+        public int PreyVisionDistanceAverage { get; private set; }
+        public int PredatorVisionDistanceAverage { get; private set; }
+        // Metabolism averages
         public int PreyMetabolismAverage { get; private set; }
         public int PredatorMetabolismAverage { get; private set; }
         ///////////////////////////////////////////////////////
+
         private int _step;
         public readonly List<string> _rows = new();
 
@@ -52,30 +54,28 @@ namespace EvolutionSimulator.Core.Analytics
         {
             _step++;
 
-            // Record metrics for the current simulation step, such as population counts
             LivingPreyCount = PopulationManager.GetLivingPreyCount();
             LivingPredatorCount = PopulationManager.GetLivingPredatorCount();
             FoodCount = EnvironmentManager.GetAvailableFoodCount();
-            // Calculate average traits for prey and predators.
-             PreySpeedAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Speed);
-             PredatorSpeedAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Speed);
-             PreySizeAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Size);
-             PredatorSizeAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Size);
-             PreyStaminaAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Stamina);
-             PredatorStaminaAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Stamina);
-             PreyVisionRadiusAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.VisionRadius);
-             PredatorVisionRadiusAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.VisionRadius);
-             PreyMetabolismAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Metabolism);
-             PredatorMetabolismAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Metabolism);
 
-            // Buffer this step's data in memory
+            PreySpeedAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Speed);
+            PredatorSpeedAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Speed);
+            PreySizeAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Size);
+            PredatorSizeAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Size);
+            PreyStaminaAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Stamina);
+            PredatorStaminaAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Stamina);
+            PreyVisionDistanceAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.VisionDistance);
+            PredatorVisionDistanceAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.VisionDistance);
+            PreyMetabolismAverage = SafeAverage(PopulationManager.PreyPopulation, p => p.Traits.Metabolism);
+            PredatorMetabolismAverage = SafeAverage(PopulationManager.PredatorPopulation, p => p.Traits.Metabolism);
+
             _rows.Add(string.Join(",",
                 _step,
                 LivingPreyCount, LivingPredatorCount, FoodCount,
                 PreySpeedAverage, PredatorSpeedAverage,
                 PreySizeAverage, PredatorSizeAverage,
                 PreyStaminaAverage, PredatorStaminaAverage,
-                PreyVisionRadiusAverage, PredatorVisionRadiusAverage,
+                PreyVisionDistanceAverage, PredatorVisionDistanceAverage,
                 PreyMetabolismAverage, PredatorMetabolismAverage));
         }
 
@@ -86,12 +86,12 @@ namespace EvolutionSimulator.Core.Analytics
                 "PreySpeedAvg,PredatorSpeedAvg," +
                 "PreySizeAvg,PredatorSizeAvg," +
                 "PreyStaminaAvg,PredatorStaminaAvg," +
-                "PreyVisionRadiusAvg,PredatorVisionRadiusAvg," +
+                "PreyVisionDistanceAvg,PredatorVisionDistanceAvg," +
                 "PreyMetabolismAvg,PredatorMetabolismAvg";
 
-            // Write header + all buffered rows in a single I/O operation
             using var writer = new StreamWriter(path, false);
             writer.WriteLine(header);
+
             foreach (var row in _rows)
             {
                 writer.WriteLine(row);

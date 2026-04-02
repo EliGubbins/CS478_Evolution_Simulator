@@ -8,7 +8,7 @@ using ScottPlot;
 
 namespace EcosystemSimulator.Analytics
 {
-    internal class Graphs
+    public class Graphs
     {
         public string filePath {  get; set; }
         public SimulationEngine SimulationEngine { get; set;}

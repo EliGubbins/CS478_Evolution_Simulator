@@ -10,8 +10,10 @@ namespace EvolutionSimulator.Core.Entities
         private const float BasePreyEnergyEfficiency = 1.1f;
         private const float PreySizeEnergyBonusFactor = 0.25f;
         private const float MaxPreyEnergyEfficiency = 2.0f;
+        private const float PredatorVisionFieldOfViewDegrees = 110f;
 
         public float ReproductionCooldown { get; private set; }
+        public override float VisionFieldOfViewDegrees => PredatorVisionFieldOfViewDegrees;
 
         public Predator(Traits traits, float startX, float startY, float startingEnergy)
             : base(traits, startX, startY, startingEnergy)
@@ -33,14 +35,14 @@ namespace EvolutionSimulator.Core.Entities
             if (ReproductionCooldown > 0)
                 ReproductionCooldown -= deltaTime;
 
-            DecideMovement(populationManager);
+            DecideMovement(populationManager, deltaTime);
 
             TryCatchPrey(populationManager);
 
             base.Update(environmentManager, populationManager, deltaTime);
         }
 
-        public void DecideMovement(PopulationManager populationManager)
+        public void DecideMovement(PopulationManager populationManager, float deltaTime)
         {
             // Choose whether to hunt nearby prey or wander.
             Prey? prey = FindNearestPrey(populationManager);
@@ -51,7 +53,7 @@ namespace EvolutionSimulator.Core.Entities
                 return;
             }
 
-            Wander();
+            Wander(deltaTime);
         }
 
         public void HuntPrey(Prey prey)
@@ -59,15 +61,6 @@ namespace EvolutionSimulator.Core.Entities
             // Set movement direction toward a prey target.
             float dx = prey.X - X;
             float dy = prey.Y - Y;
-
-            SetDirection(dx, dy);
-        }
-
-        public void Wander()
-        {
-            // Set a semi-random movement direction when no prey is nearby.
-            float dx = Random.Shared.NextSingle() * 2 - 1;
-            float dy = Random.Shared.NextSingle() * 2 - 1;
 
             SetDirection(dx, dy);
         }
@@ -83,7 +76,7 @@ namespace EvolutionSimulator.Core.Entities
             float distance = DistanceTo(prey);
 
             // TODO: determine what trait will effect the radius preds are willing to hunt
-            float catchRange = MathF.Max(MinimumCatchRange, Traits.VisionRadius * CatchRangeFactor);
+            float catchRange = MathF.Max(MinimumCatchRange, Traits.VisionDistance * CatchRangeFactor);
 
             if (distance > catchRange)
                 return;
@@ -166,7 +159,7 @@ namespace EvolutionSimulator.Core.Entities
                 
                 float distance = DistanceTo(prey);
 
-                if (distance < closestDistance && distance <= Traits.VisionRadius)
+                if (distance < closestDistance && CanSee(prey))
                 {
                     closest = prey;
                     closestDistance = distance;
@@ -185,7 +178,7 @@ namespace EvolutionSimulator.Core.Entities
             float predatorAdvantage = 
                 (Traits.Speed * 0.5f) +
                 (Traits.Stamina * 0.2f) +
-                (Traits.VisionRadius * 0.1f) +
+                (Traits.VisionDistance * 0.1f) +
                 (Traits.Size * 0.2f);
             
             float preyAdvantage = 

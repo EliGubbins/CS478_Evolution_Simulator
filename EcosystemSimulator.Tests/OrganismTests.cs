@@ -56,6 +56,8 @@ public sealed class OrganismTests
         Assert.InRange(organism.Y, 0f, 100f);
         Assert.Equal(100f, organism.X);
         Assert.Equal(0f, organism.Y);
+        Assert.Equal(-0.707f, organism.DirectionX, 3);
+        Assert.Equal(0.707f, organism.DirectionY, 3);
     }
 
     [Fact]
@@ -67,6 +69,34 @@ public sealed class OrganismTests
 
         Assert.False(organism.IsAlive);
         Assert.Equal(0f, organism.Energy);
+    }
+
+    [Fact]
+    public void WanderKeepsDirectionForLongerDurationInsteadOfRerollingImmediately()
+    {
+        TestOrganism organism = CreateOrganism();
+
+        organism.WanderForTest(0.1f);
+        float firstDirectionX = organism.DirectionX;
+        float firstDirectionY = organism.DirectionY;
+
+        organism.WanderForTest(1f);
+        organism.WanderForTest(1f);
+        organism.WanderForTest(1f);
+
+        Assert.Equal(firstDirectionX, organism.DirectionX);
+        Assert.Equal(firstDirectionY, organism.DirectionY);
+    }
+
+    [Fact]
+    public void CanSeePointRequiresTargetToBeInsideVisionCone()
+    {
+        TestOrganism organism = CreateOrganism(startX: 0f, startY: 0f);
+        organism.SetDirection(1f, 0f);
+
+        Assert.True(organism.CanSeePointForTest(4f, 0f));
+        Assert.False(organism.CanSeePointForTest(0f, 4f));
+        Assert.False(organism.CanSeePointForTest(-4f, 0f));
     }
 
     [Fact]
@@ -84,7 +114,7 @@ public sealed class OrganismTests
     private static TestOrganism CreateOrganism(float startX = 10f, float startY = 10f, float startingEnergy = 20f)
     {
         return new TestOrganism(
-            new Traits(speed: 2f, size: 1f, stamina: 3f, visionRadius: 5f, metabolism: 4f),
+            new Traits(speed: 2f, size: 1f, stamina: 3f, visionDistance: 5f, metabolism: 4f),
             startX,
             startY,
             startingEnergy);

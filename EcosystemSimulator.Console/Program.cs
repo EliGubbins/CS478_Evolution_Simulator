@@ -1,3 +1,4 @@
+using EvolutionSimulator.Core;
 using EcosystemSimulator.Analytics;
 using EvolutionSimulator.Core.Analytics;
 using System.Net.NetworkInformation;
@@ -41,9 +42,7 @@ namespace EvolutionSimulator.Core
                     PrintSummary(engine);
 
                 if (engine.PopulationManager.GetLivingPreyCount() == 0 || engine.PopulationManager.GetLivingPredatorCount() == 0)
-                {
                     engine.Stop();
-                }
             }
 
             Console.WriteLine();

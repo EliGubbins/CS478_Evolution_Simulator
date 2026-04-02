@@ -20,8 +20,10 @@ namespace EvolutionSimulator.Core.Entities
         private const float MinimumInteractionRange = 1f;
         private const float ReproductionEnergyThreshold = 55f;
         private const float ReproductionCooldownDuration = 8f;
+        private const float PreyVisionFieldOfViewDegrees = 270f;
 
         public float ReproductionCooldown { get; private set; }
+        public override float VisionFieldOfViewDegrees => PreyVisionFieldOfViewDegrees;
 
         public Prey(Traits traits, float startX, float startY, float startingEnergy)
             : base(traits, startX, startY, startingEnergy)
@@ -48,14 +50,14 @@ namespace EvolutionSimulator.Core.Entities
             Predator? predator = FindNearestPredator(populationManager);
             Food? food = FindNearestFood(environmentManager);
 
-            DecideMovement(environmentManager, populationManager);
+            DecideMovement(environmentManager, populationManager, deltaTime);
 
             TryEatFood(environmentManager);
 
             base.Update(environmentManager, populationManager, deltaTime);
         }
 
-        public void DecideMovement(EnvironmentManager environmentManager, PopulationManager populationManager)
+        public void DecideMovement(EnvironmentManager environmentManager, PopulationManager populationManager, float deltaTime)
         {
             // Choose whether to flee, forage, or wander based on nearby threats and food.
             Predator? predator = FindNearestPredator(populationManager);
@@ -74,7 +76,7 @@ namespace EvolutionSimulator.Core.Entities
                 return;
             }
 
-            Wander();
+            Wander(deltaTime);
         }
 
         public void FleeFromPredator(Predator predator)
@@ -95,15 +97,6 @@ namespace EvolutionSimulator.Core.Entities
             SetDirection(dx, dy);
         }
 
-        public void Wander()
-        {
-            // Set a semi-random movement direction when no immediate stimulus exists.
-            float dx = Random.Shared.NextSingle() * 2 - 1;
-            float dy = Random.Shared.NextSingle() * 2 - 1;
-
-            SetDirection(dx, dy);
-        }
-
         public void TryEatFood(EnvironmentManager environmentManager)
         {
             // Consume nearby food and increase energy if food is reachable.
@@ -117,7 +110,7 @@ namespace EvolutionSimulator.Core.Entities
             // TODO: determine how distance should be calculated here
             // When should the prey go to the food or not, and what traits should determine that
             // Size is just a place holder comparison for the time being
-            float interactionRange = MathF.Max(MinimumInteractionRange, Traits.VisionRadius * InteractionRangeFactor);
+            float interactionRange = MathF.Max(MinimumInteractionRange, Traits.VisionDistance * InteractionRangeFactor);
 
             if (distance <= interactionRange)
             {
@@ -183,7 +176,7 @@ namespace EvolutionSimulator.Core.Entities
                 
                 float distance = DistanceTo(predator);
 
-                if (distance < closestDistance && distance <= Traits.VisionRadius)
+                if (distance < closestDistance && CanSee(predator))
                 {
                     closest = predator;
                     closestDistance = distance;
@@ -206,7 +199,7 @@ namespace EvolutionSimulator.Core.Entities
                 
                 float distance = DistanceTo(food.X, food.Y);
 
-                if (distance < closestDistance && distance <= Traits.VisionRadius)
+                if (distance < closestDistance && CanSeePoint(food.X, food.Y))
                 {
                     closest = food;
                     closestDistance = distance;
