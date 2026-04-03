@@ -47,7 +47,7 @@ namespace EvolutionSimulator.Core
                 predatorStartingEnergy,
                 mutationRate);
         }
-        
+
 
         public void Initialize(
             int initialPreyCount,

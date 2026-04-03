@@ -1,9 +1,12 @@
+using EcosystemSimulator.Analytics;
+using EcosystemSimulator.Models;
 using EvolutionSimulator.Core;
 using EvolutionSimulator.Core.Rendering;
 using EvolutionSimulator.MonoGameHost.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Security.Cryptography.X509Certificates;
 
 namespace EvolutionSimulator.MonoGameHost
 {
@@ -34,19 +37,28 @@ namespace EvolutionSimulator.MonoGameHost
             graphics.PreferredBackBufferWidth = 1280;
             graphics.PreferredBackBufferHeight = 720;
 
-            engine = new SimulationEngine(
-                worldWidth: 220f,
-                worldHeight: 140f,
-                initialPreyCount: 35,
-                initialPredatorCount: 10,
-                preyStartingEnergy: 55f,
-                predatorStartingEnergy: 70f,
-                mutationRate: 0.1f);
+            string configPath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "..", "..", "..",
+                "DefaultParametersMono.ini");
 
-            engine.EnvironmentManager.MaxFoodCount = 180;
-            engine.EnvironmentManager.DefaultFoodNutritionValue = 10f;
-            engine.EnvironmentManager.FoodRegenerationRate = 8f;
-            engine.EnvironmentManager.SeedInitialFood(100);
+            configPath = Path.GetFullPath(configPath);
+            DefaultParameters parameters = new DefaultParameters();
+            parameters = DefaultParameters.LoadFromFile(configPath);
+
+            engine = new SimulationEngine(
+                worldWidth: parameters.WorldWidth,
+                worldHeight: parameters.WorldHeight,
+                initialPreyCount: parameters.InitialPreyCount,
+                initialPredatorCount: parameters.InitialPredatorCount,
+                preyStartingEnergy: parameters.PreyStartingEnergy,
+                predatorStartingEnergy: parameters.PredatorStartingEnergy,
+                mutationRate: parameters.MutationRate);
+
+            engine.EnvironmentManager.MaxFoodCount = parameters.MaxFoodCount;
+            engine.EnvironmentManager.DefaultFoodNutritionValue = parameters.FoodNutritionValue;
+            engine.EnvironmentManager.FoodRegenerationRate = parameters.FoodRegenerationRate;
+            engine.EnvironmentManager.SeedInitialFood(parameters.InitialFoodCount);
 
             renderBridge = new SimulationRenderBridge(engine);
             simulationTimeScale = DefaultSimulationTimeScale;
@@ -56,6 +68,7 @@ namespace EvolutionSimulator.MonoGameHost
 
             UpdateWindowTitle();
         }
+        
 
         protected override void Initialize()
         {
@@ -100,6 +113,13 @@ namespace EvolutionSimulator.MonoGameHost
             if (IsSingleKeyPress(keyboardState, Keys.OemMinus) || IsSingleKeyPress(keyboardState, Keys.Subtract))
                 AdjustSimulationSpeed(-SimulationTimeScaleStep);
 
+            if (IsSingleKeyPress(keyboardState, Keys.OemMinus) || IsSingleKeyPress(keyboardState, Keys.Escape))
+            {
+                engine.MetricsManager.ExportToCsv();
+                var graphs = new Graphs(engine);
+                graphs.CreateAllGraphs();
+                Exit();
+            }
             if (engine.IsRunning)
             {
                 float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds * simulationTimeScale;
@@ -158,7 +178,7 @@ namespace EvolutionSimulator.MonoGameHost
 
         private void UpdateWindowTitle()
         {
-            Window.Title = $"Evolution Simulator | Speed {simulationTimeScale:0.00}x | Space Pause | R Reset | +/- Speed";
+            Window.Title = $"Evolution Simulator | Speed {simulationTimeScale:0.00}x | Space Pause | R Reset | +/- Speed | ESC Close & Save Metrics";
         }
     }
 }
