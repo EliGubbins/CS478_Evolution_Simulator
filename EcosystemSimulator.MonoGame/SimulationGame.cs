@@ -1,8 +1,10 @@
 using EcosystemSimulator.Analytics;
 using EcosystemSimulator.Models;
+using EcosystemSimulator.MonoGame;
 using EvolutionSimulator.Core;
 using EvolutionSimulator.Core.Rendering;
 using EvolutionSimulator.MonoGameHost.Graphics;
+using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -10,6 +12,13 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace EvolutionSimulator.MonoGameHost
 {
+    public enum SimulationMode
+    {
+        SliderMenu,
+        Running,
+        Paused,
+        Results
+    }
     public sealed class SimulationGame : Game
     {
         private const float DefaultSimulationTimeScale = 1.5f;
@@ -25,6 +34,14 @@ namespace EvolutionSimulator.MonoGameHost
         private WorldRenderViewport viewport;
         private KeyboardState previousKeyboardState;
         private float simulationTimeScale;
+
+        private SimulationMode _mode = SimulationMode.SliderMenu;
+        private MainMenu _mainMenu = null!;
+
+        private FontSystem _fontSystem;
+        private SpriteFontBase _menuFont;
+
+        public string configPath;
 
         public SimulationGame()
         {
@@ -72,7 +89,7 @@ namespace EvolutionSimulator.MonoGameHost
 
         protected override void Initialize()
         {
-            engine.Start();
+            //engine.Start();
             base.Initialize();
         }
 
@@ -80,50 +97,70 @@ namespace EvolutionSimulator.MonoGameHost
         {
             renderer = new MonoGameRenderFrameRenderer(GraphicsDevice);
             renderer.Initialize(viewport, renderBridge.Palette);
+
+            _fontSystem = new FontSystem();
+            string fontPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "Figtree-VariableFont_wght.ttf");
+            fontPath = Path.GetFullPath(fontPath);
+            _fontSystem.AddFont(File.ReadAllBytes(fontPath));
+            _menuFont = _fontSystem.GetFont(24);
+            
+            // Initialize MainMenu
+            _mainMenu = new MainMenu(GraphicsDevice, fontPath, configPath);
         }
 
         protected override void Update(GameTime gameTime)
         {
             KeyboardState keyboardState = Keyboard.GetState();
 
-            if (keyboardState.IsKeyDown(Keys.Escape))
-                Exit();
-
-            if (IsSingleKeyPress(keyboardState, Keys.Space))
+            switch (_mode)
             {
-                if (engine.IsRunning)
-                    engine.Stop();
-                else
-                    engine.Start();
-            }
+                case SimulationMode.SliderMenu:
+                    var action = _mainMenu.Update(keyboardState, previousKeyboardState);
+                    if (action == MenuAction.Start)
+                    {
+                        engine.Start();
+                        _mode = SimulationMode.Running;
+                    }
+                    else if (action == MenuAction.Quit)
+                        Exit();
+                    break;
 
-            if (IsSingleKeyPress(keyboardState, Keys.R))
-            {
-                engine.Reset();
-                engine.EnvironmentManager.MaxFoodCount = 180;
-                engine.EnvironmentManager.DefaultFoodNutritionValue = 10f;
-                engine.EnvironmentManager.FoodRegenerationRate = 8f;
-                engine.EnvironmentManager.SeedInitialFood(100);
-                engine.Start();
-            }
+                case SimulationMode.Running:
+                case SimulationMode.Paused:
+                    if (IsSingleKeyPress(keyboardState, Keys.Escape))
+                    {
+                        engine.Stop();
+                        engine.MetricsManager.ExportToCsv();
+                        var graphs = new Graphs(engine);
+                        graphs.CreateAllGraphs();
+                        Exit();
+                    }
+                    if (IsSingleKeyPress(keyboardState, Keys.Space))
+                    {
+                        if (engine.IsRunning) { engine.Stop(); _mode = SimulationMode.Paused; }
+                        else { engine.Start(); _mode = SimulationMode.Running; }
+                    }
+                    if (IsSingleKeyPress(keyboardState, Keys.R))
+                    {
+                        engine.Reset();
+                        engine.EnvironmentManager.MaxFoodCount = 180;
+                        engine.EnvironmentManager.DefaultFoodNutritionValue = 10f;
+                        engine.EnvironmentManager.FoodRegenerationRate = 8f;
+                        engine.EnvironmentManager.SeedInitialFood(100);
+                        engine.Start();
+                        _mode = SimulationMode.Running;
+                    }
+                    if (IsSingleKeyPress(keyboardState, Keys.OemPlus) || IsSingleKeyPress(keyboardState, Keys.Add))
+                        AdjustSimulationSpeed(SimulationTimeScaleStep);
+                    if (IsSingleKeyPress(keyboardState, Keys.OemMinus) || IsSingleKeyPress(keyboardState, Keys.Subtract))
+                        AdjustSimulationSpeed(-SimulationTimeScaleStep);
 
-            if (IsSingleKeyPress(keyboardState, Keys.OemPlus) || IsSingleKeyPress(keyboardState, Keys.Add))
-                AdjustSimulationSpeed(SimulationTimeScaleStep);
-
-            if (IsSingleKeyPress(keyboardState, Keys.OemMinus) || IsSingleKeyPress(keyboardState, Keys.Subtract))
-                AdjustSimulationSpeed(-SimulationTimeScaleStep);
-
-            if (IsSingleKeyPress(keyboardState, Keys.OemMinus) || IsSingleKeyPress(keyboardState, Keys.Escape))
-            {
-                engine.MetricsManager.ExportToCsv();
-                var graphs = new Graphs(engine);
-                graphs.CreateAllGraphs();
-                Exit();
-            }
-            if (engine.IsRunning)
-            {
-                float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds * simulationTimeScale;
-                engine.Step(deltaTime);
+                    if (_mode == SimulationMode.Running)
+                    {
+                        float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds * simulationTimeScale;
+                        engine.Step(deltaTime);
+                    }
+                    break;
             }
 
             previousKeyboardState = keyboardState;
@@ -132,11 +169,18 @@ namespace EvolutionSimulator.MonoGameHost
 
         protected override void Draw(GameTime gameTime)
         {
-            if (renderer is null)
-                return;
+            if (renderer is null) return;
 
-            SimulationRenderFrame frame = renderBridge.CreateFrame();
-            renderer.Render(frame, viewport);
+            if (_mode == SimulationMode.SliderMenu)
+            {
+                GraphicsDevice.Clear(Color.White);
+                _mainMenu.Draw();
+            }
+            else
+            {
+                SimulationRenderFrame frame = renderBridge.CreateFrame();
+                renderer.Render(frame, viewport);
+            }
 
             base.Draw(gameTime);
         }
