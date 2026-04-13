@@ -48,5 +48,9 @@ namespace EvolutionSimulator.Core.Rendering
         public float ToScreenY(float worldY) => OffsetY + (worldY * Scale);
 
         public float ToScreenSize(float worldSize) => MathF.Max(1f, worldSize * Scale);
+
+        public float ToWorldX(float screenX) => (screenX - OffsetX) / Scale;
+
+        public float ToWorldY(float screenY) => (screenY - OffsetY) / Scale;
     }
 }

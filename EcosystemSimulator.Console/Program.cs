@@ -2,6 +2,7 @@ using EvolutionSimulator.Core;
 using EcosystemSimulator.Analytics;
 using EcosystemSimulator.Models;
 using EvolutionSimulator.Core.Analytics;
+using EvolutionSimulator.Core.Models;
 
 using System.Net.NetworkInformation;
 
@@ -67,6 +68,23 @@ namespace EvolutionSimulator.Core
             engine.EnvironmentManager.DefaultFoodNutritionValue = settings.FoodNutritionValue;
             engine.EnvironmentManager.FoodRegenerationRate = settings.FoodRegenerationRate;
             engine.EnvironmentManager.SeedInitialFood(settings.InitialFoodCount);
+
+            // Apply trait configuration from ini file
+            engine.PopulationManager.InitialTraitVariance = parameters.InitialTraitVariance;
+            engine.PopulationManager.DefaultPreyTraits = new Traits(
+                parameters.PreySpeed, parameters.PreySize, parameters.PreyStamina,
+                parameters.PreyVisionDistance, parameters.PreyMetabolism);
+            engine.PopulationManager.DefaultPredatorTraits = new Traits(
+                parameters.PredatorSpeed, parameters.PredatorSize, parameters.PredatorStamina,
+                parameters.PredatorVisionDistance, parameters.PredatorMetabolism);
+
+            // Re-seed population so it uses the traits loaded from the ini file
+            engine.PopulationManager.SeedInitialPopulation(
+                settings.InitialPreyCount,
+                settings.InitialPredatorCount,
+                engine.EnvironmentManager,
+                settings.PreyStartingEnergy,
+                settings.PredatorStartingEnergy);
 
             
             Console.WriteLine();

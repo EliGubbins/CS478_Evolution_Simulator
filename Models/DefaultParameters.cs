@@ -25,6 +25,23 @@ namespace EcosystemSimulator.Models
         public int MaxSteps { get; set; } = 100;
         public int OutputInterval { get; set; } = 5;
 
+        // Initial trait variance applied when seeding populations
+        public float InitialTraitVariance { get; set; } = 2f;
+
+        // Default prey traits
+        public float PreySpeed { get; set; } = 6f;
+        public float PreySize { get; set; } = 2.5f;
+        public float PreyStamina { get; set; } = 6f;
+        public float PreyVisionDistance { get; set; } = 7f;
+        public float PreyMetabolism { get; set; } = 4f;
+
+        // Default predator traits
+        public float PredatorSpeed { get; set; } = 8f;
+        public float PredatorSize { get; set; } = 4.5f;
+        public float PredatorStamina { get; set; } = 4f;
+        public float PredatorVisionDistance { get; set; } = 9f;
+        public float PredatorMetabolism { get; set; } = 4f;
+
         public static DefaultParameters LoadFromFile(string filePath)
         {
             var parameters = new DefaultParameters();
@@ -118,6 +135,50 @@ namespace EcosystemSimulator.Models
                         case "OutputInterval":
                             if (int.TryParse(value, out var outputInterval))
                                 parameters.OutputInterval = outputInterval;
+                            break;
+                        case "InitialTraitVariance":
+                            if (float.TryParse(value, out var traitVariance))
+                                parameters.InitialTraitVariance = traitVariance;
+                            break;
+                        case "PreySpeed":
+                            if (float.TryParse(value, out var preySpeed))
+                                parameters.PreySpeed = preySpeed;
+                            break;
+                        case "PreySize":
+                            if (float.TryParse(value, out var preySize))
+                                parameters.PreySize = preySize;
+                            break;
+                        case "PreyStamina":
+                            if (float.TryParse(value, out var preyStamina))
+                                parameters.PreyStamina = preyStamina;
+                            break;
+                        case "PreyVisionDistance":
+                            if (float.TryParse(value, out var preyVision))
+                                parameters.PreyVisionDistance = preyVision;
+                            break;
+                        case "PreyMetabolism":
+                            if (float.TryParse(value, out var preyMetabolism))
+                                parameters.PreyMetabolism = preyMetabolism;
+                            break;
+                        case "PredatorSpeed":
+                            if (float.TryParse(value, out var predatorSpeed))
+                                parameters.PredatorSpeed = predatorSpeed;
+                            break;
+                        case "PredatorSize":
+                            if (float.TryParse(value, out var predatorSize))
+                                parameters.PredatorSize = predatorSize;
+                            break;
+                        case "PredatorStamina":
+                            if (float.TryParse(value, out var predatorStamina))
+                                parameters.PredatorStamina = predatorStamina;
+                            break;
+                        case "PredatorVisionDistance":
+                            if (float.TryParse(value, out var predatorVision))
+                                parameters.PredatorVisionDistance = predatorVision;
+                            break;
+                        case "PredatorMetabolism":
+                            if (float.TryParse(value, out var predatorMetabolism))
+                                parameters.PredatorMetabolism = predatorMetabolism;
                             break;
                     }
                 }
