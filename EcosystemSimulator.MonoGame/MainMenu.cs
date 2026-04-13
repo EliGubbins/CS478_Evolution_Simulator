@@ -112,7 +112,7 @@ namespace EcosystemSimulator.MonoGame
             bool clicked = mouse.LeftButton == ButtonState.Released
                             && _prevMouse.LeftButton == ButtonState.Pressed;
 
-            // --- Mouse: click on a field box ---
+            // Click on field
             if (clicked)
             {
                 bool hitField = false;
@@ -155,14 +155,14 @@ namespace EcosystemSimulator.MonoGame
                 }
             }
 
-            // --- Mouse: hover highlights buttons ---
+            // highlight buttons
             for (int i = 0; i < _buttonRects.Length; i++)
             {
                 if (_buttonRects[i].Contains(mousePos))
                     _selectedButton = i;
             }
 
-            // --- Keyboard: typing into focused field ---
+            // typing into field
             if (_focusedField >= 0)
             {
                 HandleTextInput(kb, prevKb);
@@ -185,7 +185,7 @@ namespace EcosystemSimulator.MonoGame
                 return MenuAction.None;
             }
 
-            // --- Keyboard: navigating buttons ---
+            // navigate buttons with keyboard
             if (IsPressed(kb, prevKb, Keys.Down))
                 _selectedButton = (_selectedButton + 1) % 2;
             if (IsPressed(kb, prevKb, Keys.Up))
