@@ -15,8 +15,8 @@ namespace EvolutionSimulator.Core
     public class PopulationManager
     {
         public float InitialTraitVariance { get; set; } = 2f;
-        public Traits DefaultPreyTraits { get; set; } = new(6f, 2.5f, 6f, 7f, 4f);
-        public Traits DefaultPredatorTraits { get; set; } = new(8f, 4.5f, 4f, 9f, 4f);
+        public Traits DefaultPreyTraits { get; set; } = new(6f, 2f, 6f, 7f, 4f);
+        public Traits DefaultPredatorTraits { get; set; } = new(8f, 3.5f, 4f, 9f, 4f);
 
         public float MutationRate { get; set; }
 
@@ -207,7 +207,7 @@ namespace EvolutionSimulator.Core
         {
             return new Traits(
                 VaryTrait(baseline.Speed),
-                VaryTrait(baseline.Size),
+                VarySizeTrait(baseline.Size),
                 VaryTrait(baseline.Stamina),
                 VaryTrait(baseline.VisionDistance),
                 VaryTrait(baseline.Metabolism));
@@ -217,6 +217,13 @@ namespace EvolutionSimulator.Core
         {
             float offset = (Random.Shared.NextSingle() * 2f * InitialTraitVariance) - InitialTraitVariance;
             return MathF.Max(0.1f, baselineValue + offset);
+        }
+
+        private float VarySizeTrait(float baselineValue)
+        {
+            float sizeVariance = MathF.Min(InitialTraitVariance, 0.75f);
+            float offset = (Random.Shared.NextSingle() * 2f * sizeVariance) - sizeVariance;
+            return Traits.ClampSize(baselineValue + offset);
         }
     }
 }

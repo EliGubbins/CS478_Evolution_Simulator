@@ -100,7 +100,7 @@ public sealed class PredatorTests
         float largeEnergyGain = predator.CalculateEnergyGain(largePrey);
 
         Assert.True(largeEnergyGain > smallEnergyGain);
-        Assert.Equal(67.5f, smallEnergyGain);
+        Assert.Equal(73.75f, smallEnergyGain);
         Assert.Equal(100f, largeEnergyGain);
     }
 }

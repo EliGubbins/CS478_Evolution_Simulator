@@ -9,6 +9,9 @@ namespace EvolutionSimulator.Core.Models
     public class Traits
     {
         private const float MinimumTraitValue = 0.1f;
+        private const float MinimumSizeValue = 1.5f;
+        private const float MaximumSizeValue = 4.5f;
+        private const float SizeMutationStep = 0.15f;
 
         public float Speed { get; set; }
         public float Size { get; set; }
@@ -24,7 +27,7 @@ namespace EvolutionSimulator.Core.Models
         public Traits(float speed, float size, float stamina, float visionDistance, float metabolism)
         {
             Speed = speed;
-            Size = size;
+            Size = ClampSize(size);
             Stamina = stamina;
             VisionDistance = visionDistance;
             Metabolism = metabolism;
@@ -41,7 +44,7 @@ namespace EvolutionSimulator.Core.Models
                 Speed = MutateValue(Speed);
 
             if (Random.Shared.NextSingle() < mutationRate)
-                Size = MutateValue(Size);
+                Size = MutateSize(Size);
 
             if (Random.Shared.NextSingle() < mutationRate)
                 Stamina = MutateValue(Stamina);
@@ -57,6 +60,17 @@ namespace EvolutionSimulator.Core.Models
         {
             float mutatedValue = value + (Random.Shared.NextSingle() * 0.5f) - 0.25f;
             return MathF.Max(MinimumTraitValue, mutatedValue);
+        }
+
+        public static float ClampSize(float size)
+        {
+            return Math.Clamp(size, MinimumSizeValue, MaximumSizeValue);
+        }
+
+        private static float MutateSize(float size)
+        {
+            float mutatedSize = size + (Random.Shared.NextSingle() * 2f * SizeMutationStep) - SizeMutationStep;
+            return ClampSize(mutatedSize);
         }
     }
 }

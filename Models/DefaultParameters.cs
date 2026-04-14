@@ -30,14 +30,14 @@ namespace EcosystemSimulator.Models
 
         // Default prey traits
         public float PreySpeed { get; set; } = 6f;
-        public float PreySize { get; set; } = 2.5f;
+        public float PreySize { get; set; } = 2f;
         public float PreyStamina { get; set; } = 6f;
         public float PreyVisionDistance { get; set; } = 7f;
         public float PreyMetabolism { get; set; } = 4f;
 
         // Default predator traits
         public float PredatorSpeed { get; set; } = 8f;
-        public float PredatorSize { get; set; } = 4.5f;
+        public float PredatorSize { get; set; } = 3.5f;
         public float PredatorStamina { get; set; } = 4f;
         public float PredatorVisionDistance { get; set; } = 9f;
         public float PredatorMetabolism { get; set; } = 4f;
