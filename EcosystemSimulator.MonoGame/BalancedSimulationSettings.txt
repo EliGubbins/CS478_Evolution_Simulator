@@ -1,0 +1,24 @@
+Balanced simulation checkpoint
+
+Default MonoGame config backup:
+- File: DefaultParametersMono.BalancedBackup.ini
+- WorldWidth=320
+- WorldHeight=220
+- InitialPreyCount=35
+- InitialPredatorCount=10
+- PreyStartingEnergy=55
+- PredatorStartingEnergy=70
+- MutationRate=0.1
+- InitialFoodCount=100
+- FoodRegenerationRate=5
+- FoodNutritionValue=30
+- MaxFoodCount=180
+
+Matching movement tuning in code:
+- File: ..\Entities\Organism.cs
+- MinimumWanderDuration=8f
+- MaximumWanderDuration=16f
+
+If the main defaults are changed accidentally, copy the values from
+DefaultParametersMono.BalancedBackup.ini back into DefaultParametersMono.ini
+and keep the Organism wander duration constants aligned with the values above.
