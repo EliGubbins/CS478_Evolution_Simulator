@@ -1,6 +1,9 @@
 using EvolutionSimulator.Core;
 using EcosystemSimulator.Analytics;
+using EcosystemSimulator.Models;
 using EvolutionSimulator.Core.Analytics;
+using EvolutionSimulator.Core.Models;
+
 using System.Net.NetworkInformation;
 
 namespace EvolutionSimulator.Core
@@ -11,10 +14,48 @@ namespace EvolutionSimulator.Core
         {
             Console.WriteLine("Evolution Simulator");
             Console.WriteLine("-------------------");
-
+            /*
             SimulationSettings settings = PromptForSettings();
 
             SimulationEngine engine = new(
+                settings.WorldWidth,
+                settings.WorldHeight,
+                settings.InitialPreyCount,
+                settings.InitialPredatorCount,
+                settings.PreyStartingEnergy,
+                settings.PredatorStartingEnergy,
+                settings.MutationRate);
+            */
+       
+
+            DefaultParameters parameters = new DefaultParameters();
+            
+            // Path to DefaultParameters.ini in the EcosystemSimulator.Console project folder
+            string configPath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "..", "..", "..",
+                "DefaultParameters.ini");
+            
+            configPath = Path.GetFullPath(configPath);
+            parameters = DefaultParameters.LoadFromFile(configPath);
+
+             SimulationSettings settings = new SimulationSettings(
+                WorldWidth: parameters.WorldWidth,
+                WorldHeight: parameters.WorldHeight,
+                InitialPreyCount: parameters.InitialPreyCount,
+                InitialPredatorCount: parameters.InitialPredatorCount,
+                PreyStartingEnergy: parameters.PreyStartingEnergy,
+                PredatorStartingEnergy: parameters.PredatorStartingEnergy,
+                MutationRate: parameters.MutationRate,
+                InitialFoodCount: parameters.InitialFoodCount,
+                FoodRegenerationRate: parameters.FoodRegenerationRate,
+                FoodNutritionValue: parameters.FoodNutritionValue,
+                MaxFoodCount: parameters.MaxFoodCount,
+                DeltaTime: parameters.DeltaTime,
+                MaxSteps: parameters.MaxSteps,
+                OutputInterval: parameters.OutputInterval);
+
+            SimulationEngine engine = new SimulationEngine(
                 settings.WorldWidth,
                 settings.WorldHeight,
                 settings.InitialPreyCount,
@@ -28,6 +69,24 @@ namespace EvolutionSimulator.Core
             engine.EnvironmentManager.FoodRegenerationRate = settings.FoodRegenerationRate;
             engine.EnvironmentManager.SeedInitialFood(settings.InitialFoodCount);
 
+            // Apply trait configuration from ini file
+            engine.PopulationManager.InitialTraitVariance = parameters.InitialTraitVariance;
+            engine.PopulationManager.DefaultPreyTraits = new Traits(
+                parameters.PreySpeed, parameters.PreySize, parameters.PreyStamina,
+                parameters.PreyVisionDistance, parameters.PreyMetabolism);
+            engine.PopulationManager.DefaultPredatorTraits = new Traits(
+                parameters.PredatorSpeed, parameters.PredatorSize, parameters.PredatorStamina,
+                parameters.PredatorVisionDistance, parameters.PredatorMetabolism);
+
+            // Re-seed population so it uses the traits loaded from the ini file
+            engine.PopulationManager.SeedInitialPopulation(
+                settings.InitialPreyCount,
+                settings.InitialPredatorCount,
+                engine.EnvironmentManager,
+                settings.PreyStartingEnergy,
+                settings.PredatorStartingEnergy);
+
+            
             Console.WriteLine();
             Console.WriteLine("Starting simulation...");
             PrintSummary(engine);

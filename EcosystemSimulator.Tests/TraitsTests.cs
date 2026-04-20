@@ -20,4 +20,15 @@ public sealed class TraitsTests
         Assert.Equal(original.VisionDistance, clone.VisionDistance);
         Assert.Equal(original.Metabolism, clone.Metabolism);
     }
+
+    [Theory]
+    [InlineData(0.5f, 1.5f)]
+    [InlineData(3f, 3f)]
+    [InlineData(6f, 4.5f)]
+    public void ConstructorClampsSizeIntoExpectedRange(float inputSize, float expectedSize)
+    {
+        Traits traits = new(7f, inputSize, 5f, 8f, 4f);
+
+        Assert.Equal(expectedSize, traits.Size);
+    }
 }

@@ -33,7 +33,7 @@ public sealed class PopulationManagerTests
         foreach (Prey prey in populationManager.PreyPopulation)
         {
             Assert.InRange(prey.Traits.Speed, 4f, 8f);
-            Assert.InRange(prey.Traits.Size, 0.5f, 4.5f);
+            Assert.InRange(prey.Traits.Size, 1.5f, 2.75f);
             Assert.InRange(prey.Traits.Stamina, 4f, 8f);
             Assert.InRange(prey.Traits.VisionDistance, 5f, 9f);
             Assert.InRange(prey.Traits.Metabolism, 2f, 6f);
@@ -42,7 +42,7 @@ public sealed class PopulationManagerTests
         foreach (Predator predator in populationManager.PredatorPopulation)
         {
             Assert.InRange(predator.Traits.Speed, 6f, 10f);
-            Assert.InRange(predator.Traits.Size, 2.5f, 6.5f);
+            Assert.InRange(predator.Traits.Size, 2.75f, 4.25f);
             Assert.InRange(predator.Traits.Stamina, 2f, 6f);
             Assert.InRange(predator.Traits.VisionDistance, 7f, 11f);
             Assert.InRange(predator.Traits.Metabolism, 2f, 6f);
