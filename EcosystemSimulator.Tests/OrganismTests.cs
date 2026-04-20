@@ -52,10 +52,10 @@ public sealed class OrganismTests
         organism.Move(1f);
         organism.ClampToWorld(environmentManager);
 
-        Assert.InRange(organism.X, 0f, 100f);
-        Assert.InRange(organism.Y, 0f, 100f);
-        Assert.Equal(100f, organism.X);
-        Assert.Equal(0f, organism.Y);
+        Assert.InRange(organism.X, 1.5f, 98.5f);
+        Assert.InRange(organism.Y, 1.5f, 98.5f);
+        Assert.Equal(98.5f, organism.X);
+        Assert.Equal(1.5f, organism.Y);
         Assert.Equal(-0.707f, organism.DirectionX, 3);
         Assert.Equal(0.707f, organism.DirectionY, 3);
     }
