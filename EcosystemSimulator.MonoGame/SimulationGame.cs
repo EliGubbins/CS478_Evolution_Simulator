@@ -1,4 +1,4 @@
-using EcosystemSimulator.Analytics;
+﻿using EcosystemSimulator.Analytics;
 using EcosystemSimulator.Models;
 using EcosystemSimulator.MonoGame;
 using EvolutionSimulator.Core;
@@ -53,7 +53,8 @@ namespace EvolutionSimulator.MonoGameHost
 
         private Guid? _selectedOrganismId;
 
-        public string configPath;
+        public string configPath = string.Empty;
+        private SimulationParameters _activeParameters = new();
 
         public SimulationGame()
         {
@@ -66,7 +67,7 @@ namespace EvolutionSimulator.MonoGameHost
             graphics.PreferredBackBufferWidth = 1280;
             graphics.PreferredBackBufferHeight = 720;
 
-            string configPath = Path.Combine(
+            configPath = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
                 "..", "..", "..",
                 "DefaultParametersMono.ini");
@@ -74,6 +75,7 @@ namespace EvolutionSimulator.MonoGameHost
             configPath = Path.GetFullPath(configPath);
             DefaultParameters parameters = new DefaultParameters();
             parameters = DefaultParameters.LoadFromFile(configPath);
+            _activeParameters = CreateSimulationParameters(parameters);
 
             engine = new SimulationEngine(
                 worldWidth: parameters.WorldWidth,
@@ -84,27 +86,7 @@ namespace EvolutionSimulator.MonoGameHost
                 predatorStartingEnergy: parameters.PredatorStartingEnergy,
                 mutationRate: parameters.MutationRate);
 
-            engine.EnvironmentManager.MaxFoodCount = parameters.MaxFoodCount;
-            engine.EnvironmentManager.DefaultFoodNutritionValue = parameters.FoodNutritionValue;
-            engine.EnvironmentManager.FoodRegenerationRate = parameters.FoodRegenerationRate;
-            engine.EnvironmentManager.SeedInitialFood(parameters.InitialFoodCount);
-
-            // Apply trait configuration from ini file
-            engine.PopulationManager.InitialTraitVariance = parameters.InitialTraitVariance;
-            engine.PopulationManager.DefaultPreyTraits = new Traits(
-                parameters.PreySpeed, parameters.PreySize, parameters.PreyStamina,
-                parameters.PreyVisionDistance, parameters.PreyMetabolism);
-            engine.PopulationManager.DefaultPredatorTraits = new Traits(
-                parameters.PredatorSpeed, parameters.PredatorSize, parameters.PredatorStamina,
-                parameters.PredatorVisionDistance, parameters.PredatorMetabolism);
-
-            // Re-seed population so it uses the traits loaded from the ini file
-            engine.PopulationManager.SeedInitialPopulation(
-                parameters.InitialPreyCount,
-                parameters.InitialPredatorCount,
-                engine.EnvironmentManager,
-                parameters.PreyStartingEnergy,
-                parameters.PredatorStartingEnergy);
+            ApplySimulationParameters(_activeParameters);
 
             renderBridge = new SimulationRenderBridge(engine);
             simulationTimeScale = DefaultSimulationTimeScale;
@@ -153,6 +135,9 @@ namespace EvolutionSimulator.MonoGameHost
                     var action = _mainMenu.Update(keyboardState, previousKeyboardState);
                     if (action == MenuAction.Start)
                     {
+                        _activeParameters = CloneParameters(_mainMenu.Parameters);
+                        ApplySimulationParameters(_activeParameters);
+                        _selectedOrganismId = null;
                         engine.Start();
                         _mode = SimulationMode.Running;
                     }
@@ -179,11 +164,7 @@ namespace EvolutionSimulator.MonoGameHost
                     if (IsSingleKeyPress(keyboardState, Keys.R))
                     {
                         _selectedOrganismId = null;
-                        engine.Reset();
-                        engine.EnvironmentManager.MaxFoodCount = 180;
-                        engine.EnvironmentManager.DefaultFoodNutritionValue = 10f;
-                        engine.EnvironmentManager.FoodRegenerationRate = 8f;
-                        engine.EnvironmentManager.SeedInitialFood(100);
+                        ApplySimulationParameters(_activeParameters);
                         engine.Start();
                         _mode = SimulationMode.Running;
                     }
@@ -310,7 +291,7 @@ namespace EvolutionSimulator.MonoGameHost
                 $"Stamina:  {organism.Traits.Stamina:F2}",
                 $"Vision:   {organism.Traits.VisionDistance:F2}",
                 $"Metab:    {organism.Traits.Metabolism:F2}",
-                $"FOV:      {organism.VisionFieldOfViewDegrees:F0}�",
+                $"FOV:      {organism.VisionFieldOfViewDegrees:F0}°",
                 $"Pos:      ({organism.X:F1}, {organism.Y:F1})"
             ];
 
@@ -391,5 +372,89 @@ namespace EvolutionSimulator.MonoGameHost
         {
             Window.Title = $"Evolution Simulator | Speed {simulationTimeScale:0.00}x | Space Pause | R Reset | +/- Speed | ESC Close & Save Metrics";
         }
+
+        private void ApplySimulationParameters(SimulationParameters parameters)
+        {
+            engine.PopulationManager.InitialTraitVariance = parameters.InitialTraitVariance;
+            engine.PopulationManager.DefaultPreyTraits = new Traits(
+                parameters.PreySpeed,
+                parameters.PreySize,
+                parameters.PreyStamina,
+                parameters.PreyVisionDistance,
+                parameters.PreyMetabolism);
+            engine.PopulationManager.DefaultPredatorTraits = new Traits(
+                parameters.PredatorSpeed,
+                parameters.PredatorSize,
+                parameters.PredatorStamina,
+                parameters.PredatorVisionDistance,
+                parameters.PredatorMetabolism);
+
+            engine.Initialize(
+                parameters.InitialPreyCount,
+                parameters.InitialPredatorCount,
+                parameters.PreyStartingEnergy,
+                parameters.PredatorStartingEnergy,
+                parameters.MutationRate);
+
+            engine.EnvironmentManager.MaxFoodCount = parameters.MaxFoodCount;
+            engine.EnvironmentManager.DefaultFoodNutritionValue = parameters.FoodNutritionValue;
+            engine.EnvironmentManager.FoodRegenerationRate = parameters.FoodRegenerationRate;
+            engine.EnvironmentManager.SeedInitialFood(parameters.InitialFoodCount);
+        }
+
+        private static SimulationParameters CreateSimulationParameters(DefaultParameters parameters)
+        {
+            return new SimulationParameters
+            {
+                InitialPreyCount = parameters.InitialPreyCount,
+                InitialPredatorCount = parameters.InitialPredatorCount,
+                PreyStartingEnergy = parameters.PreyStartingEnergy,
+                PredatorStartingEnergy = parameters.PredatorStartingEnergy,
+                MutationRate = parameters.MutationRate,
+                InitialFoodCount = parameters.InitialFoodCount,
+                FoodRegenerationRate = parameters.FoodRegenerationRate,
+                FoodNutritionValue = parameters.FoodNutritionValue,
+                MaxFoodCount = parameters.MaxFoodCount,
+                InitialTraitVariance = parameters.InitialTraitVariance,
+                PreySpeed = parameters.PreySpeed,
+                PreySize = parameters.PreySize,
+                PreyStamina = parameters.PreyStamina,
+                PreyVisionDistance = parameters.PreyVisionDistance,
+                PreyMetabolism = parameters.PreyMetabolism,
+                PredatorSpeed = parameters.PredatorSpeed,
+                PredatorSize = parameters.PredatorSize,
+                PredatorStamina = parameters.PredatorStamina,
+                PredatorVisionDistance = parameters.PredatorVisionDistance,
+                PredatorMetabolism = parameters.PredatorMetabolism,
+            };
+        }
+
+        private static SimulationParameters CloneParameters(SimulationParameters parameters)
+        {
+            return new SimulationParameters
+            {
+                InitialPreyCount = parameters.InitialPreyCount,
+                InitialPredatorCount = parameters.InitialPredatorCount,
+                PreyStartingEnergy = parameters.PreyStartingEnergy,
+                PredatorStartingEnergy = parameters.PredatorStartingEnergy,
+                MutationRate = parameters.MutationRate,
+                InitialFoodCount = parameters.InitialFoodCount,
+                FoodRegenerationRate = parameters.FoodRegenerationRate,
+                FoodNutritionValue = parameters.FoodNutritionValue,
+                MaxFoodCount = parameters.MaxFoodCount,
+                InitialTraitVariance = parameters.InitialTraitVariance,
+                PreySpeed = parameters.PreySpeed,
+                PreySize = parameters.PreySize,
+                PreyStamina = parameters.PreyStamina,
+                PreyVisionDistance = parameters.PreyVisionDistance,
+                PreyMetabolism = parameters.PreyMetabolism,
+                PredatorSpeed = parameters.PredatorSpeed,
+                PredatorSize = parameters.PredatorSize,
+                PredatorStamina = parameters.PredatorStamina,
+                PredatorVisionDistance = parameters.PredatorVisionDistance,
+                PredatorMetabolism = parameters.PredatorMetabolism,
+            };
+        }
     }
 }
+
