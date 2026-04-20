@@ -6,8 +6,8 @@ namespace EvolutionSimulator.Core.Entities
     public abstract class Organism
     {
         // Min and Max wonder duration in T(seconds)
-        private const float MinimumWanderDuration = 4f;
-        private const float MaximumWanderDuration = 9f;
+        private const float MinimumWanderDuration = 8f;
+        private const float MaximumWanderDuration = 16f;
         private const float MinimumFacingMagnitude = 0.001f;
 
         public Guid Id { get; protected set; }
