@@ -399,6 +399,7 @@ namespace EvolutionSimulator.MonoGameHost
             engine.EnvironmentManager.MaxFoodCount = parameters.MaxFoodCount;
             engine.EnvironmentManager.DefaultFoodNutritionValue = parameters.FoodNutritionValue;
             engine.EnvironmentManager.FoodRegenerationRate = parameters.FoodRegenerationRate;
+            engine.EnvironmentManager.ClearAllTerrain();
             engine.EnvironmentManager.SeedInitialFood(parameters.InitialFoodCount);
         }
 
