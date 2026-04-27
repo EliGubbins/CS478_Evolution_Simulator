@@ -31,6 +31,11 @@ namespace EvolutionSimulator.MonoGameHost
         private const float ClickSelectionWorldRadius = 3f;
         private const float DetailPanelPadding = 10f;
         private const float DetailPanelWidth = 260f;
+        private const int TopBarHeight = 52;
+        private const int TopBarPadding = 12;
+        private const int ToggleSpacing = 18;
+        private const int CheckboxSize = 18;
+        private const int TopBarReservedSpace = 72;
 
         private readonly GraphicsDeviceManager graphics;
         private readonly SimulationEngine engine;
@@ -52,6 +57,9 @@ namespace EvolutionSimulator.MonoGameHost
         private Texture2D? _panelTexture;
 
         private Guid? _selectedOrganismId;
+        private bool _showDirectionVectors = true;
+        private bool _showFieldOfViews = true;
+        private bool _showBorderBox = true;
 
         public string configPath = string.Empty;
         private SimulationParameters _activeParameters = new();
@@ -92,7 +100,8 @@ namespace EvolutionSimulator.MonoGameHost
             simulationTimeScale = DefaultSimulationTimeScale;
             viewport = renderBridge.CreateViewport(
                 graphics.PreferredBackBufferWidth,
-                graphics.PreferredBackBufferHeight);
+                graphics.PreferredBackBufferHeight,
+                topInset: TopBarReservedSpace);
 
             UpdateWindowTitle();
         }
@@ -173,9 +182,11 @@ namespace EvolutionSimulator.MonoGameHost
                     if (IsSingleKeyPress(keyboardState, Keys.OemMinus) || IsSingleKeyPress(keyboardState, Keys.Subtract))
                         AdjustSimulationSpeed(-SimulationTimeScaleStep);
 
-                    // Handle organism click selection
                     if (mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
-                        HandleOrganismClick(mouseState.X, mouseState.Y);
+                    {
+                        if (!HandleSimulationOverlayClick(mouseState.X, mouseState.Y))
+                            HandleOrganismClick(mouseState.X, mouseState.Y);
+                    }
 
                     if (_mode == SimulationMode.Running || (_mode == SimulationMode.Clicked && engine.IsRunning))
                     {
@@ -207,7 +218,11 @@ namespace EvolutionSimulator.MonoGameHost
             else
             {
                 SimulationRenderFrame frame = renderBridge.CreateFrame();
+                renderer.ShowDirectionIndicators = _showDirectionVectors;
+                renderer.ShowVisionCones = _showFieldOfViews;
+                renderer.ShowWorldBorder = _showBorderBox;
                 renderer.Render(frame, viewport);
+                DrawSimulationTopBar();
 
                 // Draw organism detail panel overlay
                 if (_selectedOrganismId.HasValue)
@@ -298,7 +313,7 @@ namespace EvolutionSimulator.MonoGameHost
             float lineHeight = _detailFont.LineHeight;
             float panelHeight = (lines.Length * lineHeight) + (DetailPanelPadding * 2);
             float panelX = GraphicsDevice.PresentationParameters.BackBufferWidth - DetailPanelWidth - DetailPanelPadding;
-            float panelY = DetailPanelPadding;
+            float panelY = TopBarHeight + DetailPanelPadding;
 
             _uiSpriteBatch.Begin(blendState: BlendState.AlphaBlend);
 
@@ -344,6 +359,102 @@ namespace EvolutionSimulator.MonoGameHost
             _uiSpriteBatch.End();
         }
 
+        private void DrawSimulationTopBar()
+        {
+            if (_uiSpriteBatch is null || _panelTexture is null || _detailFont is null)
+                return;
+
+            Rectangle barRect = new(
+                TopBarPadding,
+                TopBarPadding,
+                GraphicsDevice.PresentationParameters.BackBufferWidth - (TopBarPadding * 2),
+                TopBarHeight);
+
+            Rectangle directionRect = GetToggleBounds(TopBarPadding + 16, "Direction Vectors");
+            Rectangle fieldOfViewRect = GetToggleBounds(directionRect.Right + ToggleSpacing, "Field of Views");
+            Rectangle borderRect = GetToggleBounds(fieldOfViewRect.Right + ToggleSpacing, "Border Box");
+
+            _uiSpriteBatch.Begin(blendState: BlendState.AlphaBlend);
+
+            _uiSpriteBatch.Draw(_panelTexture, barRect, new Color(255, 255, 255, 220));
+            DrawToggle(directionRect, "Direction Vectors", _showDirectionVectors);
+            DrawToggle(fieldOfViewRect, "Field of Views", _showFieldOfViews);
+            DrawToggle(borderRect, "Border Box", _showBorderBox);
+
+            _uiSpriteBatch.End();
+        }
+
+        private void DrawToggle(Rectangle bounds, string label, bool isChecked)
+        {
+            if (_uiSpriteBatch is null || _panelTexture is null || _detailFont is null)
+                return;
+
+            Rectangle checkboxRect = new(
+                bounds.X,
+                bounds.Y + ((bounds.Height - CheckboxSize) / 2),
+                CheckboxSize,
+                CheckboxSize);
+
+            _uiSpriteBatch.Draw(_panelTexture, checkboxRect, Color.White);
+            _uiSpriteBatch.Draw(_panelTexture, new Rectangle(checkboxRect.X, checkboxRect.Y, checkboxRect.Width, 2), Color.DarkSlateGray);
+            _uiSpriteBatch.Draw(_panelTexture, new Rectangle(checkboxRect.X, checkboxRect.Bottom - 2, checkboxRect.Width, 2), Color.DarkSlateGray);
+            _uiSpriteBatch.Draw(_panelTexture, new Rectangle(checkboxRect.X, checkboxRect.Y, 2, checkboxRect.Height), Color.DarkSlateGray);
+            _uiSpriteBatch.Draw(_panelTexture, new Rectangle(checkboxRect.Right - 2, checkboxRect.Y, 2, checkboxRect.Height), Color.DarkSlateGray);
+
+            if (isChecked)
+            {
+                Rectangle fillRect = new(
+                    checkboxRect.X + 4,
+                    checkboxRect.Y + 4,
+                    checkboxRect.Width - 8,
+                    checkboxRect.Height - 8);
+                _uiSpriteBatch.Draw(_panelTexture, fillRect, Color.ForestGreen);
+            }
+
+            Vector2 textPosition = new(checkboxRect.Right + 8f, bounds.Y + ((bounds.Height - _detailFont.LineHeight) / 2f));
+            _uiSpriteBatch.DrawString(_detailFont, label, textPosition, Color.Black);
+        }
+
+        private bool HandleSimulationOverlayClick(int mouseX, int mouseY)
+        {
+            Rectangle directionRect = GetToggleBounds(TopBarPadding + 16, "Direction Vectors");
+            Rectangle fieldOfViewRect = GetToggleBounds(directionRect.Right + ToggleSpacing, "Field of Views");
+            Rectangle borderRect = GetToggleBounds(fieldOfViewRect.Right + ToggleSpacing, "Border Box");
+            Point clickPoint = new(mouseX, mouseY);
+
+            if (directionRect.Contains(clickPoint))
+            {
+                _showDirectionVectors = !_showDirectionVectors;
+                return true;
+            }
+
+            if (fieldOfViewRect.Contains(clickPoint))
+            {
+                _showFieldOfViews = !_showFieldOfViews;
+                return true;
+            }
+
+            if (borderRect.Contains(clickPoint))
+            {
+                _showBorderBox = !_showBorderBox;
+                return true;
+            }
+
+            return false;
+        }
+
+        private Rectangle GetToggleBounds(int left, string label)
+        {
+            float textWidth = _detailFont is null ? 120f : _detailFont.MeasureString(label).X;
+            int width = CheckboxSize + 8 + (int)MathF.Ceiling(textWidth) + 12;
+
+            return new Rectangle(
+                left,
+                TopBarPadding + 8,
+                width,
+                TopBarHeight - 16);
+        }
+
         private bool IsSingleKeyPress(KeyboardState keyboardState, Keys key)
         {
             return keyboardState.IsKeyDown(key) && previousKeyboardState.IsKeyUp(key);
@@ -363,7 +474,8 @@ namespace EvolutionSimulator.MonoGameHost
         {
             viewport = renderBridge.CreateViewport(
                 GraphicsDevice.PresentationParameters.BackBufferWidth,
-                GraphicsDevice.PresentationParameters.BackBufferHeight);
+                GraphicsDevice.PresentationParameters.BackBufferHeight,
+                topInset: TopBarReservedSpace);
 
             renderer?.Resize(viewport);
         }

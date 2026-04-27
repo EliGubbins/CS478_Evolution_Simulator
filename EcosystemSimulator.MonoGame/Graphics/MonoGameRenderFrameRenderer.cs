@@ -14,6 +14,9 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
         private Texture2D? filledCircleTexture;
         private Texture2D? ringTexture;
         private SimulationRenderPalette palette = SimulationRenderPalette.Default;
+        public bool ShowDirectionIndicators { get; set; } = true;
+        public bool ShowVisionCones { get; set; } = true;
+        public bool ShowWorldBorder { get; set; } = true;
 
         public MonoGameRenderFrameRenderer(GraphicsDevice graphicsDevice)
         {
@@ -110,6 +113,9 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
             float height = frame.WorldHeight * viewport.Scale;
             Color color = ToXnaColor(palette.WorldBorder);
             int thickness = 2;
+
+            if (!ShowWorldBorder)
+                return;
 
             spriteBatch!.Draw(pixelTexture, new Rectangle((int)left, (int)top, (int)width, thickness), color);
             spriteBatch.Draw(pixelTexture, new Rectangle((int)left, (int)(top + height - thickness), (int)width, thickness), color);
@@ -268,9 +274,13 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
                     ? new RenderColor(palette.Predator.R, palette.Predator.G, palette.Predator.B, 55)
                     : new RenderColor(palette.Prey.R, palette.Prey.G, palette.Prey.B, 55);
 
-                DrawVisionCone(organism, viewport, visionColor);
+                if (ShowVisionCones)
+                    DrawVisionCone(organism, viewport, visionColor);
+
                 DrawCircle(organism.X, organism.Y, organism.Radius, bodyColor, viewport, filled: true);
-                DrawDirectionIndicator(organism, viewport, bodyColor);
+
+                if (ShowDirectionIndicators)
+                    DrawDirectionIndicator(organism, viewport, bodyColor);
             }
         }
 

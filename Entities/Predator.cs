@@ -11,14 +11,23 @@ namespace EvolutionSimulator.Core.Entities
         private const float PreySizeEnergyBonusFactor = 0.25f;
         private const float MaxPreyEnergyEfficiency = 2.0f;
         private const float PredatorVisionFieldOfViewDegrees = 110f;
+        private const float MaximumHuntDuration = 10f;
+        private const float HuntCooldownDuration = 3f;
 
         public float ReproductionCooldown { get; private set; }
         public override float VisionFieldOfViewDegrees => PredatorVisionFieldOfViewDegrees;
+        public Guid? CurrentTargetId { get; private set; }
+        public bool IsHuntCoolingDown => HuntCooldownRemaining > 0f;
+
+        private float HuntTimeElapsed { get; set; }
+        private float HuntCooldownRemaining { get; set; }
 
         public Predator(Traits traits, float startX, float startY, float startingEnergy)
             : base(traits, startX, startY, startingEnergy)
         {
             ReproductionCooldown = 0;
+            HuntTimeElapsed = 0f;
+            HuntCooldownRemaining = 0f;
         }
 
         public override void Update(EnvironmentManager environmentManager, PopulationManager populationManager, float deltaTime)
@@ -35,6 +44,9 @@ namespace EvolutionSimulator.Core.Entities
             if (ReproductionCooldown > 0)
                 ReproductionCooldown -= deltaTime;
 
+            if (HuntCooldownRemaining > 0f)
+                HuntCooldownRemaining -= deltaTime;
+
             DecideMovement(populationManager, deltaTime);
 
             TryCatchPrey(populationManager);
@@ -45,14 +57,31 @@ namespace EvolutionSimulator.Core.Entities
         public void DecideMovement(PopulationManager populationManager, float deltaTime)
         {
             // Choose whether to hunt nearby prey or wander.
+            if (HuntCooldownRemaining > 0f)
+            {
+                ResetHuntState();
+                Wander(deltaTime);
+                return;
+            }
+
             Prey? prey = FindNearestPrey(populationManager);
 
-            if (prey != null)
+            if (prey is not null)
             {
+                TrackHunt(prey, deltaTime);
+
+                if (HuntTimeElapsed >= MaximumHuntDuration)
+                {
+                    AbandonHunt();
+                    Wander(deltaTime);
+                    return;
+                }
+
                 HuntPrey(prey);
                 return;
             }
 
+            ResetHuntState();
             Wander(deltaTime);
         }
 
@@ -88,6 +117,8 @@ namespace EvolutionSimulator.Core.Entities
                 float energyGained = CalculateEnergyGain(prey);
                 prey.Die();
                 Energy += energyGained;
+                ResetHuntState();
+                HuntCooldownRemaining = 0f;
             }
         }
 
@@ -194,6 +225,30 @@ namespace EvolutionSimulator.Core.Entities
             probability = Math.Clamp(probability, 0.1f, 0.9f);
 
             return probability;
+        }
+
+        private void TrackHunt(Prey prey, float deltaTime)
+        {
+            if (CurrentTargetId != prey.Id)
+            {
+                CurrentTargetId = prey.Id;
+                HuntTimeElapsed = 0f;
+                return;
+            }
+
+            HuntTimeElapsed += deltaTime;
+        }
+
+        private void ResetHuntState()
+        {
+            CurrentTargetId = null;
+            HuntTimeElapsed = 0f;
+        }
+
+        private void AbandonHunt()
+        {
+            ResetHuntState();
+            HuntCooldownRemaining = HuntCooldownDuration;
         }
     }
 }
