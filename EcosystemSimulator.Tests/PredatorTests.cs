@@ -103,4 +103,19 @@ public sealed class PredatorTests
         Assert.Equal(73.75f, smallEnergyGain);
         Assert.Equal(100f, largeEnergyGain);
     }
+
+    [Fact]
+    public void DecideMovementAbandonsHuntAfterTimeoutAndStartsCooldown()
+    {
+        PopulationManager populationManager = new();
+        Predator predator = new(new Traits(6f, 4.5f, 5f, 10f, 4f), 0f, 0f, 60f);
+        Prey prey = new(new Traits(7f, 2.5f, 5f, 8f, 4f), 2f, 0f, 50f);
+        populationManager.AddPrey(prey);
+
+        for (int i = 0; i < 11; i++)
+            predator.DecideMovement(populationManager, 1f);
+
+        Assert.Null(predator.CurrentTargetId);
+        Assert.True(predator.IsHuntCoolingDown);
+    }
 }

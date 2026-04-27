@@ -148,6 +148,39 @@ namespace EvolutionSimulator.Core.Environment
             TerrainRegions.Clear();
         }
 
+        public void SeedRockBorder(float rockRadius = 5f, float spacingMultiplier = 2.8f, float inset = 2f)
+        {
+            ClearAllTerrain();
+
+            float clampedRadius = MathF.Max(1f, rockRadius);
+            float spacing = MathF.Max(clampedRadius * 1.25f, clampedRadius * spacingMultiplier);
+            float horizontalMin = clampedRadius + inset;
+            float horizontalMax = MathF.Max(horizontalMin, Width - clampedRadius - inset);
+            float verticalMin = clampedRadius + inset;
+            float verticalMax = MathF.Max(verticalMin, Height - clampedRadius - inset);
+
+            for (float x = horizontalMin; x <= horizontalMax; x += spacing)
+            {
+                AddTerrainRegion(TerrainType.Rocky, x, verticalMin, clampedRadius);
+
+                if (verticalMax > verticalMin)
+                    AddTerrainRegion(TerrainType.Rocky, x, verticalMax, clampedRadius);
+            }
+
+            for (float y = verticalMin + spacing; y < verticalMax; y += spacing)
+            {
+                AddTerrainRegion(TerrainType.Rocky, horizontalMin, y, clampedRadius);
+
+                if (horizontalMax > horizontalMin)
+                    AddTerrainRegion(TerrainType.Rocky, horizontalMax, y, clampedRadius);
+            }
+        }
+
+        private void AddTerrainRegion(TerrainType terrainType, float centerX, float centerY, float radius)
+        {
+            TerrainRegions.Add(new TerrainRegion(terrainType, centerX, centerY, radius));
+        }
+
         public int GetAvailableFoodCount()
         {
             // Return the number of food items currently available.

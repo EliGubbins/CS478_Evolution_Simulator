@@ -38,6 +38,10 @@ namespace EcosystemSimulator.MonoGame
         public float PredatorStamina = 4f;
         public float PredatorVisionDistance = 12f;
         public float PredatorMetabolism = 4f;
+
+        // Visualization options
+        public bool DrawVisionRadiusCones = false;
+        public bool LoopWhenLowOnOrganisms = false;
     }
 
     public class MainMenu
@@ -54,6 +58,8 @@ namespace EcosystemSimulator.MonoGame
         private const int BoxPadding = 8;
         private const int ColumnGap = 20;
         private const int Columns = 2;
+        private const int CheckboxSize = 24;
+        private const int CheckboxGap = 8;
 
         // Fonts
         private FontSystem _fontSystem;
@@ -106,6 +112,14 @@ namespace EcosystemSimulator.MonoGame
         private int _focusedField = -1;
         private int _selectedButton = 0;
 
+        // Checkbox state
+        private bool[] _checkboxStates;
+        private Rectangle[] _checkboxRects;
+        private readonly string[] _checkboxLabels = {
+            "Draw Vision Radius Cones",
+            "Loop When Low On Organisms"
+        };
+
         // Layout — recomputed each Draw, used for hit testing
         private Rectangle[] _fieldBoxRects;
         private Rectangle[] _buttonRects;
@@ -154,6 +168,8 @@ namespace EcosystemSimulator.MonoGame
                 PredatorStamina = defaults.PredatorStamina,
                 PredatorVisionDistance = defaults.PredatorVisionDistance,
                 PredatorMetabolism = defaults.PredatorMetabolism,
+                DrawVisionRadiusCones = false,
+                LoopWhenLowOnOrganisms = false,
             };
 
             _fieldValues = new string[]
@@ -181,6 +197,8 @@ namespace EcosystemSimulator.MonoGame
             };
 
             _fieldBoxRects = new Rectangle[_fields.Length];
+            _checkboxStates = new bool[2];
+            _checkboxRects = new Rectangle[2];
             _buttonRects = new Rectangle[2];
         }
 
@@ -213,6 +231,25 @@ namespace EcosystemSimulator.MonoGame
                         _selectedButton = -1;
                         hitField = true;
                         break;
+                    }
+                }
+
+                // Click on a checkbox
+                if (!hitField)
+                {
+                    for (int i = 0; i < _checkboxRects.Length; i++)
+                    {
+                        if (_checkboxRects[i].Contains(mousePos))
+                        {
+                            if (_focusedField >= 0)
+                                CommitField(_focusedField);
+                            _focusedField = -1;
+                            _checkboxStates[i] = !_checkboxStates[i];
+                            Parameters.DrawVisionRadiusCones = _checkboxStates[0];
+                            Parameters.LoopWhenLowOnOrganisms = _checkboxStates[1];
+                            hitField = true;
+                            break;
+                        }
                     }
                 }
 
@@ -441,7 +478,7 @@ namespace EcosystemSimulator.MonoGame
 
             // Buttons
             string[] buttons = { "Start Simulation", "Quit" };
-            int buttonY = currentY + RowHeight;
+            int buttonY = currentY + RowHeight + 40;
 
             for (int i = 0; i < buttons.Length; i++)
             {
@@ -463,7 +500,7 @@ namespace EcosystemSimulator.MonoGame
 
             // Track total content height (logical, without scroll offset)
             _contentHeight = (currentY + scrollY) - StartY
-                           + RowHeight + (buttons.Length - 1) * 60 + 44;
+                           + RowHeight + 40 + (buttons.Length - 1) * 60 + 44;
 
             _spriteBatch.End();
             _graphics.ScissorRectangle = prevScissor;
@@ -472,7 +509,7 @@ namespace EcosystemSimulator.MonoGame
             _spriteBatch.Begin();
             string hint = _focusedField >= 0
                 ? "Type value · Enter/Tab next · Esc back · Scroll ↕"
-                : "Click a field to edit · Scroll ↕ · Enter to select";
+                : "Click a field to interact · Scroll ↕ · Enter to select";
             var hintSize = _hintFont.MeasureString(hint);
             _spriteBatch.DrawString(_hintFont, hint,
                 new Vector2(screenW - hintSize.X - 20, screenH - 30), Color.Gray);

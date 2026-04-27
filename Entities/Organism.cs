@@ -6,8 +6,8 @@ namespace EvolutionSimulator.Core.Entities
     public abstract class Organism
     {
         // Min and Max wonder duration in T(seconds)
-        private const float MinimumWanderDuration = 4f;
-        private const float MaximumWanderDuration = 9f;
+        private const float MinimumWanderDuration = 8f;
+        private const float MaximumWanderDuration = 16f;
         private const float MinimumFacingMagnitude = 0.001f;
 
         public Guid Id { get; protected set; }
@@ -187,29 +187,34 @@ namespace EvolutionSimulator.Core.Entities
         {
             // Keep this organism inside the environment bounds and bounce it back into the world.
             bool hitBoundary = false;
+            float collisionRadius = MathF.Max(0f, Traits.Size);
+            float minX = collisionRadius;
+            float maxX = MathF.Max(minX, environmentManager.Width - collisionRadius);
+            float minY = collisionRadius;
+            float maxY = MathF.Max(minY, environmentManager.Height - collisionRadius);
 
-            if (X < 0)
+            if (X < minX)
             {
-                X = 0;
+                X = minX;
                 DirectionX = -DirectionX;
                 hitBoundary = true;
             }
-            else if (X > environmentManager.Width)
+            else if (X > maxX)
             {
-                X = environmentManager.Width;
+                X = maxX;
                 DirectionX = -DirectionX;
                 hitBoundary = true;
             }
 
-            if (Y < 0)
+            if (Y < minY)
             {
-                Y = 0;
+                Y = minY;
                 DirectionY = -DirectionY;
                 hitBoundary = true;
             }
-            else if (Y > environmentManager.Height)
+            else if (Y > maxY)
             {
-                Y = environmentManager.Height;
+                Y = maxY;
                 DirectionY = -DirectionY;
                 hitBoundary = true;
             }
