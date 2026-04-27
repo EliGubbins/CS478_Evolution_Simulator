@@ -31,6 +31,7 @@ namespace EvolutionSimulator.MonoGameHost
         private const float ClickSelectionWorldRadius = 3f;
         private const float DetailPanelPadding = 10f;
         private const float DetailPanelWidth = 260f;
+        private const float EmptyPopulationResetDelaySeconds = 5f;
         private const int TopBarHeight = 52;
         private const int TopBarPadding = 12;
         private const int ToggleSpacing = 18;
@@ -61,6 +62,11 @@ namespace EvolutionSimulator.MonoGameHost
         private bool _showFieldOfViews = true;
         private bool _showBorderBox = true;
 
+        // Auto-reset tracking
+        private float _emptyPopulationTimer = 0f;
+        private bool _isEmptyPopulationPhase = false;
+
+        public string configPath;
         public string configPath = string.Empty;
         private SimulationParameters _activeParameters = new();
 
@@ -149,6 +155,12 @@ namespace EvolutionSimulator.MonoGameHost
                         _selectedOrganismId = null;
                         engine.Start();
                         _mode = SimulationMode.Running;
+                        _emptyPopulationTimer = 0f;
+                        _isEmptyPopulationPhase = false;
+                        
+                        // Set vision cone rendering based on menu checkbox
+                        if (renderer != null)
+                            renderer.DrawVisionCones = _mainMenu.Parameters.DrawVisionRadiusCones;
                     }
                     else if (action == MenuAction.Quit)
                         Exit();
@@ -176,6 +188,8 @@ namespace EvolutionSimulator.MonoGameHost
                         ApplySimulationParameters(_activeParameters);
                         engine.Start();
                         _mode = SimulationMode.Running;
+                        _emptyPopulationTimer = 0f;
+                        _isEmptyPopulationPhase = false;
                     }
                     if (IsSingleKeyPress(keyboardState, Keys.OemPlus) || IsSingleKeyPress(keyboardState, Keys.Add))
                         AdjustSimulationSpeed(SimulationTimeScaleStep);
@@ -197,6 +211,10 @@ namespace EvolutionSimulator.MonoGameHost
                     // Clear selection if the organism died
                     if (_selectedOrganismId.HasValue && FindOrganismById(_selectedOrganismId.Value) is null)
                         _selectedOrganismId = null;
+
+                    // Check for empty population and handle auto-reset if enabled
+                    if (_mainMenu.Parameters.LoopWhenLowOnOrganisms)
+                        HandleAutoReset(gameTime);
 
                     break;
             }
@@ -247,6 +265,53 @@ namespace EvolutionSimulator.MonoGameHost
             }
 
             base.Dispose(disposing);
+        }
+
+        private void HandleAutoReset(GameTime gameTime)
+        {
+            int preyCount = 0;
+            int predatorCount = 0;
+
+            foreach (Organism organism in engine.PopulationManager.GetAllLivingOrganisms())
+            {
+                if (organism is Predator)
+                    predatorCount++;
+                else
+                    preyCount++;
+            }
+
+            bool populationEmpty = preyCount == 0 || predatorCount == 0;
+
+            if (populationEmpty)
+            {
+                if (!_isEmptyPopulationPhase)
+                {
+                    _isEmptyPopulationPhase = true;
+                    _emptyPopulationTimer = 0f;
+                }
+
+                _emptyPopulationTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                if (_emptyPopulationTimer >= EmptyPopulationResetDelaySeconds)
+                {
+                    _selectedOrganismId = null;
+                    engine.Stop();
+                    engine.Reset();
+                    engine.EnvironmentManager.MaxFoodCount = 180;
+                    engine.EnvironmentManager.DefaultFoodNutritionValue = 10f;
+                    engine.EnvironmentManager.FoodRegenerationRate = 8f;
+                    engine.EnvironmentManager.SeedInitialFood(100);
+                    engine.Start();
+                    _mode = SimulationMode.Running;
+                    _emptyPopulationTimer = 0f;
+                    _isEmptyPopulationPhase = false;
+                }
+            }
+            else
+            {
+                _isEmptyPopulationPhase = false;
+                _emptyPopulationTimer = 0f;
+            }
         }
 
         private void HandleOrganismClick(int screenX, int screenY)

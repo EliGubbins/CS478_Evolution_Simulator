@@ -270,9 +270,15 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
                     ? palette.Predator
                     : palette.Prey;
 
-                RenderColor visionColor = organism.Kind == RenderEntityKind.Predator
-                    ? new RenderColor(palette.Predator.R, palette.Predator.G, palette.Predator.B, 55)
-                    : new RenderColor(palette.Prey.R, palette.Prey.G, palette.Prey.B, 55);
+                // Only draw vision cone if enabled
+                if (DrawVisionCones)
+                {
+                    RenderColor visionColor = organism.Kind == RenderEntityKind.Predator
+                        ? new RenderColor(palette.Predator.R, palette.Predator.G, palette.Predator.B, 55)
+                        : new RenderColor(palette.Prey.R, palette.Prey.G, palette.Prey.B, 55);
+
+                    DrawVisionCone(organism, viewport, visionColor);
+                }
 
                 if (ShowVisionCones)
                     DrawVisionCone(organism, viewport, visionColor);
