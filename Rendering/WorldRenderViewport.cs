@@ -15,22 +15,24 @@ namespace EvolutionSimulator.Core.Rendering
             float worldHeight,
             int pixelWidth,
             int pixelHeight,
-            float padding = 24f)
+            float padding = 24f,
+            float topInset = 0f)
         {
             float safeWorldWidth = MathF.Max(1f, worldWidth);
             float safeWorldHeight = MathF.Max(1f, worldHeight);
             float safePixelWidth = MathF.Max(1, pixelWidth);
             float safePixelHeight = MathF.Max(1, pixelHeight);
             float safePadding = MathF.Max(0f, padding);
+            float safeTopInset = MathF.Max(0f, topInset);
 
             float drawableWidth = MathF.Max(1f, safePixelWidth - (safePadding * 2f));
-            float drawableHeight = MathF.Max(1f, safePixelHeight - (safePadding * 2f));
+            float drawableHeight = MathF.Max(1f, safePixelHeight - safeTopInset - (safePadding * 2f));
             float scale = MathF.Min(drawableWidth / safeWorldWidth, drawableHeight / safeWorldHeight);
 
             float contentWidth = safeWorldWidth * scale;
             float contentHeight = safeWorldHeight * scale;
             float offsetX = (safePixelWidth - contentWidth) * 0.5f;
-            float offsetY = (safePixelHeight - contentHeight) * 0.5f;
+            float offsetY = safeTopInset + safePadding + MathF.Max(0f, (drawableHeight - contentHeight) * 0.5f);
 
             return new WorldRenderViewport(
                 pixelWidth,

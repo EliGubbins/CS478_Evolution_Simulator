@@ -11,7 +11,7 @@ namespace EvolutionSimulator.Core.Rendering
         RenderColor RockyTerrain)
     {
         public static SimulationRenderPalette Default { get; } = new(
-            Background: RenderColor.Sky,
+            Background: RenderColor.PastelGrass,
             WorldBorder: RenderColor.Slate,
             Prey: RenderColor.ForestGreen,
             Predator: RenderColor.SunsetOrange,

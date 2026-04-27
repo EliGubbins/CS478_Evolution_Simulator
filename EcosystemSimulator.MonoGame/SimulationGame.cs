@@ -1,4 +1,4 @@
-using EcosystemSimulator.Analytics;
+﻿using EcosystemSimulator.Analytics;
 using EcosystemSimulator.Models;
 using EcosystemSimulator.MonoGame;
 using EvolutionSimulator.Core;
@@ -32,6 +32,11 @@ namespace EvolutionSimulator.MonoGameHost
         private const float DetailPanelPadding = 10f;
         private const float DetailPanelWidth = 260f;
         private const float EmptyPopulationResetDelaySeconds = 5f;
+        private const int TopBarHeight = 52;
+        private const int TopBarPadding = 12;
+        private const int ToggleSpacing = 18;
+        private const int CheckboxSize = 18;
+        private const int TopBarReservedSpace = 72;
 
         private readonly GraphicsDeviceManager graphics;
         private readonly SimulationEngine engine;
@@ -53,12 +58,17 @@ namespace EvolutionSimulator.MonoGameHost
         private Texture2D? _panelTexture;
 
         private Guid? _selectedOrganismId;
+        private bool _showDirectionVectors = true;
+        private bool _showFieldOfViews = true;
+        private bool _showBorderBox = true;
 
         // Auto-reset tracking
         private float _emptyPopulationTimer = 0f;
         private bool _isEmptyPopulationPhase = false;
 
         public string configPath;
+        public string configPath = string.Empty;
+        private SimulationParameters _activeParameters = new();
 
         public SimulationGame()
         {
@@ -71,7 +81,7 @@ namespace EvolutionSimulator.MonoGameHost
             graphics.PreferredBackBufferWidth = 1280;
             graphics.PreferredBackBufferHeight = 720;
 
-            string configPath = Path.Combine(
+            configPath = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
                 "..", "..", "..",
                 "DefaultParametersMono.ini");
@@ -79,6 +89,7 @@ namespace EvolutionSimulator.MonoGameHost
             configPath = Path.GetFullPath(configPath);
             DefaultParameters parameters = new DefaultParameters();
             parameters = DefaultParameters.LoadFromFile(configPath);
+            _activeParameters = CreateSimulationParameters(parameters);
 
             engine = new SimulationEngine(
                 worldWidth: parameters.WorldWidth,
@@ -89,33 +100,14 @@ namespace EvolutionSimulator.MonoGameHost
                 predatorStartingEnergy: parameters.PredatorStartingEnergy,
                 mutationRate: parameters.MutationRate);
 
-            engine.EnvironmentManager.MaxFoodCount = parameters.MaxFoodCount;
-            engine.EnvironmentManager.DefaultFoodNutritionValue = parameters.FoodNutritionValue;
-            engine.EnvironmentManager.FoodRegenerationRate = parameters.FoodRegenerationRate;
-            engine.EnvironmentManager.SeedInitialFood(parameters.InitialFoodCount);
-
-            // Apply trait configuration from ini file
-            engine.PopulationManager.InitialTraitVariance = parameters.InitialTraitVariance;
-            engine.PopulationManager.DefaultPreyTraits = new Traits(
-                parameters.PreySpeed, parameters.PreySize, parameters.PreyStamina,
-                parameters.PreyVisionDistance, parameters.PreyMetabolism);
-            engine.PopulationManager.DefaultPredatorTraits = new Traits(
-                parameters.PredatorSpeed, parameters.PredatorSize, parameters.PredatorStamina,
-                parameters.PredatorVisionDistance, parameters.PredatorMetabolism);
-
-            // Re-seed population so it uses the traits loaded from the ini file
-            engine.PopulationManager.SeedInitialPopulation(
-                parameters.InitialPreyCount,
-                parameters.InitialPredatorCount,
-                engine.EnvironmentManager,
-                parameters.PreyStartingEnergy,
-                parameters.PredatorStartingEnergy);
+            ApplySimulationParameters(_activeParameters);
 
             renderBridge = new SimulationRenderBridge(engine);
             simulationTimeScale = DefaultSimulationTimeScale;
             viewport = renderBridge.CreateViewport(
                 graphics.PreferredBackBufferWidth,
-                graphics.PreferredBackBufferHeight);
+                graphics.PreferredBackBufferHeight,
+                topInset: TopBarReservedSpace);
 
             UpdateWindowTitle();
         }
@@ -158,6 +150,9 @@ namespace EvolutionSimulator.MonoGameHost
                     var action = _mainMenu.Update(keyboardState, previousKeyboardState);
                     if (action == MenuAction.Start)
                     {
+                        _activeParameters = CloneParameters(_mainMenu.Parameters);
+                        ApplySimulationParameters(_activeParameters);
+                        _selectedOrganismId = null;
                         engine.Start();
                         _mode = SimulationMode.Running;
                         _emptyPopulationTimer = 0f;
@@ -190,11 +185,7 @@ namespace EvolutionSimulator.MonoGameHost
                     if (IsSingleKeyPress(keyboardState, Keys.R))
                     {
                         _selectedOrganismId = null;
-                        engine.Reset();
-                        engine.EnvironmentManager.MaxFoodCount = 180;
-                        engine.EnvironmentManager.DefaultFoodNutritionValue = 10f;
-                        engine.EnvironmentManager.FoodRegenerationRate = 8f;
-                        engine.EnvironmentManager.SeedInitialFood(100);
+                        ApplySimulationParameters(_activeParameters);
                         engine.Start();
                         _mode = SimulationMode.Running;
                         _emptyPopulationTimer = 0f;
@@ -205,9 +196,11 @@ namespace EvolutionSimulator.MonoGameHost
                     if (IsSingleKeyPress(keyboardState, Keys.OemMinus) || IsSingleKeyPress(keyboardState, Keys.Subtract))
                         AdjustSimulationSpeed(-SimulationTimeScaleStep);
 
-                    // Handle organism click selection
                     if (mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released)
-                        HandleOrganismClick(mouseState.X, mouseState.Y);
+                    {
+                        if (!HandleSimulationOverlayClick(mouseState.X, mouseState.Y))
+                            HandleOrganismClick(mouseState.X, mouseState.Y);
+                    }
 
                     if (_mode == SimulationMode.Running || (_mode == SimulationMode.Clicked && engine.IsRunning))
                     {
@@ -243,7 +236,11 @@ namespace EvolutionSimulator.MonoGameHost
             else
             {
                 SimulationRenderFrame frame = renderBridge.CreateFrame();
+                renderer.ShowDirectionIndicators = _showDirectionVectors;
+                renderer.ShowVisionCones = _showFieldOfViews;
+                renderer.ShowWorldBorder = _showBorderBox;
                 renderer.Render(frame, viewport);
+                DrawSimulationTopBar();
 
                 // Draw organism detail panel overlay
                 if (_selectedOrganismId.HasValue)
@@ -374,14 +371,14 @@ namespace EvolutionSimulator.MonoGameHost
                 $"Stamina:  {organism.Traits.Stamina:F2}",
                 $"Vision:   {organism.Traits.VisionDistance:F2}",
                 $"Metab:    {organism.Traits.Metabolism:F2}",
-                $"FOV:      {organism.VisionFieldOfViewDegrees:F0}�",
+                $"FOV:      {organism.VisionFieldOfViewDegrees:F0}°",
                 $"Pos:      ({organism.X:F1}, {organism.Y:F1})"
             ];
 
             float lineHeight = _detailFont.LineHeight;
             float panelHeight = (lines.Length * lineHeight) + (DetailPanelPadding * 2);
             float panelX = GraphicsDevice.PresentationParameters.BackBufferWidth - DetailPanelWidth - DetailPanelPadding;
-            float panelY = DetailPanelPadding;
+            float panelY = TopBarHeight + DetailPanelPadding;
 
             _uiSpriteBatch.Begin(blendState: BlendState.AlphaBlend);
 
@@ -427,6 +424,102 @@ namespace EvolutionSimulator.MonoGameHost
             _uiSpriteBatch.End();
         }
 
+        private void DrawSimulationTopBar()
+        {
+            if (_uiSpriteBatch is null || _panelTexture is null || _detailFont is null)
+                return;
+
+            Rectangle barRect = new(
+                TopBarPadding,
+                TopBarPadding,
+                GraphicsDevice.PresentationParameters.BackBufferWidth - (TopBarPadding * 2),
+                TopBarHeight);
+
+            Rectangle directionRect = GetToggleBounds(TopBarPadding + 16, "Direction Vectors");
+            Rectangle fieldOfViewRect = GetToggleBounds(directionRect.Right + ToggleSpacing, "Field of Views");
+            Rectangle borderRect = GetToggleBounds(fieldOfViewRect.Right + ToggleSpacing, "Border Box");
+
+            _uiSpriteBatch.Begin(blendState: BlendState.AlphaBlend);
+
+            _uiSpriteBatch.Draw(_panelTexture, barRect, new Color(255, 255, 255, 220));
+            DrawToggle(directionRect, "Direction Vectors", _showDirectionVectors);
+            DrawToggle(fieldOfViewRect, "Field of Views", _showFieldOfViews);
+            DrawToggle(borderRect, "Border Box", _showBorderBox);
+
+            _uiSpriteBatch.End();
+        }
+
+        private void DrawToggle(Rectangle bounds, string label, bool isChecked)
+        {
+            if (_uiSpriteBatch is null || _panelTexture is null || _detailFont is null)
+                return;
+
+            Rectangle checkboxRect = new(
+                bounds.X,
+                bounds.Y + ((bounds.Height - CheckboxSize) / 2),
+                CheckboxSize,
+                CheckboxSize);
+
+            _uiSpriteBatch.Draw(_panelTexture, checkboxRect, Color.White);
+            _uiSpriteBatch.Draw(_panelTexture, new Rectangle(checkboxRect.X, checkboxRect.Y, checkboxRect.Width, 2), Color.DarkSlateGray);
+            _uiSpriteBatch.Draw(_panelTexture, new Rectangle(checkboxRect.X, checkboxRect.Bottom - 2, checkboxRect.Width, 2), Color.DarkSlateGray);
+            _uiSpriteBatch.Draw(_panelTexture, new Rectangle(checkboxRect.X, checkboxRect.Y, 2, checkboxRect.Height), Color.DarkSlateGray);
+            _uiSpriteBatch.Draw(_panelTexture, new Rectangle(checkboxRect.Right - 2, checkboxRect.Y, 2, checkboxRect.Height), Color.DarkSlateGray);
+
+            if (isChecked)
+            {
+                Rectangle fillRect = new(
+                    checkboxRect.X + 4,
+                    checkboxRect.Y + 4,
+                    checkboxRect.Width - 8,
+                    checkboxRect.Height - 8);
+                _uiSpriteBatch.Draw(_panelTexture, fillRect, Color.ForestGreen);
+            }
+
+            Vector2 textPosition = new(checkboxRect.Right + 8f, bounds.Y + ((bounds.Height - _detailFont.LineHeight) / 2f));
+            _uiSpriteBatch.DrawString(_detailFont, label, textPosition, Color.Black);
+        }
+
+        private bool HandleSimulationOverlayClick(int mouseX, int mouseY)
+        {
+            Rectangle directionRect = GetToggleBounds(TopBarPadding + 16, "Direction Vectors");
+            Rectangle fieldOfViewRect = GetToggleBounds(directionRect.Right + ToggleSpacing, "Field of Views");
+            Rectangle borderRect = GetToggleBounds(fieldOfViewRect.Right + ToggleSpacing, "Border Box");
+            Point clickPoint = new(mouseX, mouseY);
+
+            if (directionRect.Contains(clickPoint))
+            {
+                _showDirectionVectors = !_showDirectionVectors;
+                return true;
+            }
+
+            if (fieldOfViewRect.Contains(clickPoint))
+            {
+                _showFieldOfViews = !_showFieldOfViews;
+                return true;
+            }
+
+            if (borderRect.Contains(clickPoint))
+            {
+                _showBorderBox = !_showBorderBox;
+                return true;
+            }
+
+            return false;
+        }
+
+        private Rectangle GetToggleBounds(int left, string label)
+        {
+            float textWidth = _detailFont is null ? 120f : _detailFont.MeasureString(label).X;
+            int width = CheckboxSize + 8 + (int)MathF.Ceiling(textWidth) + 12;
+
+            return new Rectangle(
+                left,
+                TopBarPadding + 8,
+                width,
+                TopBarHeight - 16);
+        }
+
         private bool IsSingleKeyPress(KeyboardState keyboardState, Keys key)
         {
             return keyboardState.IsKeyDown(key) && previousKeyboardState.IsKeyUp(key);
@@ -446,7 +539,8 @@ namespace EvolutionSimulator.MonoGameHost
         {
             viewport = renderBridge.CreateViewport(
                 GraphicsDevice.PresentationParameters.BackBufferWidth,
-                GraphicsDevice.PresentationParameters.BackBufferHeight);
+                GraphicsDevice.PresentationParameters.BackBufferHeight,
+                topInset: TopBarReservedSpace);
 
             renderer?.Resize(viewport);
         }
@@ -455,5 +549,90 @@ namespace EvolutionSimulator.MonoGameHost
         {
             Window.Title = $"Evolution Simulator | Speed {simulationTimeScale:0.00}x | Space Pause | R Reset | +/- Speed | ESC Close & Save Metrics";
         }
+
+        private void ApplySimulationParameters(SimulationParameters parameters)
+        {
+            engine.PopulationManager.InitialTraitVariance = parameters.InitialTraitVariance;
+            engine.PopulationManager.DefaultPreyTraits = new Traits(
+                parameters.PreySpeed,
+                parameters.PreySize,
+                parameters.PreyStamina,
+                parameters.PreyVisionDistance,
+                parameters.PreyMetabolism);
+            engine.PopulationManager.DefaultPredatorTraits = new Traits(
+                parameters.PredatorSpeed,
+                parameters.PredatorSize,
+                parameters.PredatorStamina,
+                parameters.PredatorVisionDistance,
+                parameters.PredatorMetabolism);
+
+            engine.Initialize(
+                parameters.InitialPreyCount,
+                parameters.InitialPredatorCount,
+                parameters.PreyStartingEnergy,
+                parameters.PredatorStartingEnergy,
+                parameters.MutationRate);
+
+            engine.EnvironmentManager.MaxFoodCount = parameters.MaxFoodCount;
+            engine.EnvironmentManager.DefaultFoodNutritionValue = parameters.FoodNutritionValue;
+            engine.EnvironmentManager.FoodRegenerationRate = parameters.FoodRegenerationRate;
+            engine.EnvironmentManager.ClearAllTerrain();
+            engine.EnvironmentManager.SeedInitialFood(parameters.InitialFoodCount);
+        }
+
+        private static SimulationParameters CreateSimulationParameters(DefaultParameters parameters)
+        {
+            return new SimulationParameters
+            {
+                InitialPreyCount = parameters.InitialPreyCount,
+                InitialPredatorCount = parameters.InitialPredatorCount,
+                PreyStartingEnergy = parameters.PreyStartingEnergy,
+                PredatorStartingEnergy = parameters.PredatorStartingEnergy,
+                MutationRate = parameters.MutationRate,
+                InitialFoodCount = parameters.InitialFoodCount,
+                FoodRegenerationRate = parameters.FoodRegenerationRate,
+                FoodNutritionValue = parameters.FoodNutritionValue,
+                MaxFoodCount = parameters.MaxFoodCount,
+                InitialTraitVariance = parameters.InitialTraitVariance,
+                PreySpeed = parameters.PreySpeed,
+                PreySize = parameters.PreySize,
+                PreyStamina = parameters.PreyStamina,
+                PreyVisionDistance = parameters.PreyVisionDistance,
+                PreyMetabolism = parameters.PreyMetabolism,
+                PredatorSpeed = parameters.PredatorSpeed,
+                PredatorSize = parameters.PredatorSize,
+                PredatorStamina = parameters.PredatorStamina,
+                PredatorVisionDistance = parameters.PredatorVisionDistance,
+                PredatorMetabolism = parameters.PredatorMetabolism,
+            };
+        }
+
+        private static SimulationParameters CloneParameters(SimulationParameters parameters)
+        {
+            return new SimulationParameters
+            {
+                InitialPreyCount = parameters.InitialPreyCount,
+                InitialPredatorCount = parameters.InitialPredatorCount,
+                PreyStartingEnergy = parameters.PreyStartingEnergy,
+                PredatorStartingEnergy = parameters.PredatorStartingEnergy,
+                MutationRate = parameters.MutationRate,
+                InitialFoodCount = parameters.InitialFoodCount,
+                FoodRegenerationRate = parameters.FoodRegenerationRate,
+                FoodNutritionValue = parameters.FoodNutritionValue,
+                MaxFoodCount = parameters.MaxFoodCount,
+                InitialTraitVariance = parameters.InitialTraitVariance,
+                PreySpeed = parameters.PreySpeed,
+                PreySize = parameters.PreySize,
+                PreyStamina = parameters.PreyStamina,
+                PreyVisionDistance = parameters.PreyVisionDistance,
+                PreyMetabolism = parameters.PreyMetabolism,
+                PredatorSpeed = parameters.PredatorSpeed,
+                PredatorSize = parameters.PredatorSize,
+                PredatorStamina = parameters.PredatorStamina,
+                PredatorVisionDistance = parameters.PredatorVisionDistance,
+                PredatorMetabolism = parameters.PredatorMetabolism,
+            };
+        }
     }
 }
+

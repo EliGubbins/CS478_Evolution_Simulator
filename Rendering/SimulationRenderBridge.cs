@@ -75,14 +75,15 @@ namespace EvolutionSimulator.Core.Rendering
                 .ToArray();
         }
 
-        public WorldRenderViewport CreateViewport(int pixelWidth, int pixelHeight, float padding = 24f)
+        public WorldRenderViewport CreateViewport(int pixelWidth, int pixelHeight, float padding = 24f, float topInset = 0f)
         {
             return WorldRenderViewport.Create(
                 engine.EnvironmentManager.Width,
                 engine.EnvironmentManager.Height,
                 pixelWidth,
                 pixelHeight,
-                padding);
+                padding,
+                topInset);
         }
 
         public RenderColor GetTerrainColor(TerrainType terrainType)

@@ -14,9 +14,9 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
         private Texture2D? filledCircleTexture;
         private Texture2D? ringTexture;
         private SimulationRenderPalette palette = SimulationRenderPalette.Default;
-        
-        // Vision cone rendering control
-        public bool DrawVisionCones { get; set; } = false;
+        public bool ShowDirectionIndicators { get; set; } = true;
+        public bool ShowVisionCones { get; set; } = true;
+        public bool ShowWorldBorder { get; set; } = true;
 
         public MonoGameRenderFrameRenderer(GraphicsDevice graphicsDevice)
         {
@@ -38,11 +38,13 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
                 throw new InvalidOperationException("Renderer must be initialized before rendering.");
 
             palette = frame.Palette;
-            graphicsDevice.Clear(ToXnaColor(palette.Background));
+            graphicsDevice.Clear(new Color(198, 226, 245));
 
             spriteBatch.Begin(blendState: BlendState.AlphaBlend, samplerState: SamplerState.LinearClamp);
 
+            DrawPlayableFieldBackground(frame, viewport);
             DrawTerrain(frame, viewport);
+            DrawDecorativeRockBorder(frame, viewport);
             DrawWorldBorder(frame, viewport);
             DrawFood(frame, viewport);
             DrawOrganisms(frame, viewport);
@@ -84,6 +86,22 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
             }
         }
 
+        private void DrawPlayableFieldBackground(SimulationRenderFrame frame, WorldRenderViewport viewport)
+        {
+            if (pixelTexture is null)
+                return;
+
+            float left = viewport.ToScreenX(0f);
+            float top = viewport.ToScreenY(0f);
+            float width = frame.WorldWidth * viewport.Scale;
+            float height = frame.WorldHeight * viewport.Scale;
+
+            spriteBatch!.Draw(
+                pixelTexture,
+                new Rectangle((int)left, (int)top, (int)width, (int)height),
+                ToXnaColor(palette.Background));
+        }
+
         private void DrawWorldBorder(SimulationRenderFrame frame, WorldRenderViewport viewport)
         {
             if (pixelTexture is null)
@@ -96,10 +114,137 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
             Color color = ToXnaColor(palette.WorldBorder);
             int thickness = 2;
 
+            if (!ShowWorldBorder)
+                return;
+
             spriteBatch!.Draw(pixelTexture, new Rectangle((int)left, (int)top, (int)width, thickness), color);
             spriteBatch.Draw(pixelTexture, new Rectangle((int)left, (int)(top + height - thickness), (int)width, thickness), color);
             spriteBatch.Draw(pixelTexture, new Rectangle((int)left, (int)top, thickness, (int)height), color);
             spriteBatch.Draw(pixelTexture, new Rectangle((int)(left + width - thickness), (int)top, thickness, (int)height), color);
+        }
+
+        private void DrawDecorativeRockBorder(SimulationRenderFrame frame, WorldRenderViewport viewport)
+        {
+            if (filledCircleTexture is null)
+                return;
+
+            float left = viewport.ToScreenX(0f);
+            float top = viewport.ToScreenY(0f);
+            float right = left + (frame.WorldWidth * viewport.Scale);
+            float bottom = top + (frame.WorldHeight * viewport.Scale);
+            float horizontalSpacing = 24f;
+            float verticalSpacing = 24f;
+
+            DrawRockPilesAlongHorizontalEdge(left, right, top - 6f, horizontalSpacing, true, bandIndex: 0);
+            DrawRockPilesAlongHorizontalEdge(left, right, top - 30f, horizontalSpacing * 0.95f, true, bandIndex: 1);
+            DrawRockPilesAlongHorizontalEdge(left, right, bottom + 6f, horizontalSpacing, false, bandIndex: 0);
+            DrawRockPilesAlongHorizontalEdge(left, right, bottom + 30f, horizontalSpacing * 0.95f, false, bandIndex: 1);
+
+            DrawRockPilesAlongVerticalEdge(top, bottom, left - 6f, verticalSpacing, true, bandIndex: 0);
+            DrawRockPilesAlongVerticalEdge(top, bottom, left - 30f, verticalSpacing * 0.95f, true, bandIndex: 1);
+            DrawRockPilesAlongVerticalEdge(top, bottom, right + 6f, verticalSpacing, false, bandIndex: 0);
+            DrawRockPilesAlongVerticalEdge(top, bottom, right + 30f, verticalSpacing * 0.95f, false, bandIndex: 1);
+        }
+
+        private void DrawRockPilesAlongHorizontalEdge(float left, float right, float y, float spacing, bool isTopEdge, int bandIndex)
+        {
+            int index = 0;
+
+            for (float x = left + 8f; x < right - 8f; x += spacing)
+            {
+                float jitterX = GetCenteredNoise(index + (bandIndex * 97), 0) * 8f;
+                float jitterY = GetCenteredNoise(index + (bandIndex * 97), 1) * 5f;
+                DrawRockPile(
+                    x + jitterX,
+                    y + jitterY,
+                    isHorizontal: true,
+                    flipOutward: isTopEdge ? -1f : 1f,
+                    seed: index + (isTopEdge ? 1000 : 2000) + (bandIndex * 500));
+                index++;
+            }
+        }
+
+        private void DrawRockPilesAlongVerticalEdge(float top, float bottom, float x, float spacing, bool isLeftEdge, int bandIndex)
+        {
+            int index = 0;
+
+            for (float y = top + 8f; y < bottom - 8f; y += spacing)
+            {
+                float jitterX = GetCenteredNoise(index + (bandIndex * 131), 2) * 5f;
+                float jitterY = GetCenteredNoise(index + (bandIndex * 131), 3) * 8f;
+                DrawRockPile(
+                    x + jitterX,
+                    y + jitterY,
+                    isHorizontal: false,
+                    flipOutward: isLeftEdge ? -1f : 1f,
+                    seed: index + (isLeftEdge ? 3000 : 4000) + (bandIndex * 500));
+                index++;
+            }
+        }
+
+        private void DrawRockPile(float centerX, float centerY, bool isHorizontal, float flipOutward, int seed)
+        {
+            int blobCount = 4 + (int)MathF.Floor(GetNoise(seed, 0) * 4f);
+
+            for (int i = 0; i < blobCount; i++)
+            {
+                float tangentOffset = GetCenteredNoise(seed, 10 + i) * 16f;
+                float normalOffset = (6f + (i * 5.5f)) * flipOutward + (GetCenteredNoise(seed, 20 + i) * 5f);
+                float width = 36f + (GetNoise(seed, 30 + i) * 36f);
+                float height = 28f + (GetNoise(seed, 40 + i) * 28f);
+                float rotation = GetCenteredNoise(seed, 50 + i) * 0.9f;
+                Color color = GetRockColor(seed, i);
+
+                float blobX = isHorizontal ? centerX + tangentOffset : centerX + normalOffset;
+                float blobY = isHorizontal ? centerY + normalOffset : centerY + tangentOffset;
+
+                DrawEllipse(blobX, blobY, width, height, rotation, color);
+            }
+        }
+
+        private void DrawEllipse(float centerX, float centerY, float width, float height, float rotation, Color color)
+        {
+            if (filledCircleTexture is null)
+                return;
+
+            Vector2 origin = new(filledCircleTexture.Width / 2f, filledCircleTexture.Height / 2f);
+            Vector2 scale = new(
+                MathF.Max(1f, width) / filledCircleTexture.Width,
+                MathF.Max(1f, height) / filledCircleTexture.Height);
+
+            spriteBatch!.Draw(
+                filledCircleTexture,
+                new Vector2(centerX, centerY),
+                null,
+                color,
+                rotation,
+                origin,
+                scale,
+                SpriteEffects.None,
+                0f);
+        }
+
+        private static Color GetRockColor(int seed, int layerIndex)
+        {
+            int tone = 112 + (int)(GetNoise(seed, 70 + layerIndex) * 68f);
+            int coolShift = (int)(GetCenteredNoise(seed, 80 + layerIndex) * 10f);
+            byte r = (byte)Math.Clamp(tone + coolShift - 6, 0, 255);
+            byte g = (byte)Math.Clamp(tone + coolShift - 2, 0, 255);
+            byte b = (byte)Math.Clamp(tone + coolShift + 4, 0, 255);
+            byte a = (byte)(185 + (GetNoise(seed, 90 + layerIndex) * 40f));
+
+            return new Color(r, g, b, a);
+        }
+
+        private static float GetNoise(int seed, int channel)
+        {
+            float value = MathF.Sin((seed * 12.9898f) + (channel * 78.233f)) * 43758.5453f;
+            return value - MathF.Floor(value);
+        }
+
+        private static float GetCenteredNoise(int seed, int channel)
+        {
+            return (GetNoise(seed, channel) * 2f) - 1f;
         }
 
         private void DrawFood(SimulationRenderFrame frame, WorldRenderViewport viewport)
@@ -135,8 +280,13 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
                     DrawVisionCone(organism, viewport, visionColor);
                 }
 
+                if (ShowVisionCones)
+                    DrawVisionCone(organism, viewport, visionColor);
+
                 DrawCircle(organism.X, organism.Y, organism.Radius, bodyColor, viewport, filled: true);
-                DrawDirectionIndicator(organism, viewport, bodyColor);
+
+                if (ShowDirectionIndicators)
+                    DrawDirectionIndicator(organism, viewport, bodyColor);
             }
         }
 
