@@ -476,38 +476,9 @@ namespace EcosystemSimulator.MonoGame
                 currentY += sectionRows * RowHeight;
             }
 
-            // Checkboxes
-            int checkboxStartY = currentY + RowHeight;
-            for (int i = 0; i < _checkboxStates.Length; i++)
-            {
-                int checkboxX = leftX;
-                int checkboxY = checkboxStartY + i * 40;
-                bool hovered = _checkboxRects[i].Contains(mousePos);
-                bool isChecked = _checkboxStates[i];
-
-                // Store rect for hit testing
-                _checkboxRects[i] = new Rectangle(checkboxX, checkboxY, CheckboxSize, CheckboxSize);
-
-                // Draw checkbox background — different color when checked
-                Color boxBg = isChecked 
-                    ? Color.ForestGreen 
-                    : (hovered ? Color.LightGray : Color.White);
-                DrawRect(checkboxX, checkboxY, CheckboxSize, CheckboxSize, boxBg);
-                
-                // Draw border — thicker/more prominent when checked
-                Color borderColor = isChecked ? Color.DarkGreen : (hovered ? Color.DarkGray : Color.Gray);
-                DrawRectBorder(checkboxX, checkboxY, CheckboxSize, CheckboxSize, borderColor);
-
-           
-
-                // Draw label
-                _spriteBatch.DrawString(_labelFont, _checkboxLabels[i],
-                    new Vector2(checkboxX + CheckboxSize + CheckboxGap, checkboxY + 2), Color.Black);
-            }
-
             // Buttons
             string[] buttons = { "Start Simulation", "Quit" };
-            int buttonY = checkboxStartY + 100;
+            int buttonY = currentY + RowHeight + 40;
 
             for (int i = 0; i < buttons.Length; i++)
             {
@@ -529,7 +500,7 @@ namespace EcosystemSimulator.MonoGame
 
             // Track total content height (logical, without scroll offset)
             _contentHeight = (currentY + scrollY) - StartY
-                           + RowHeight + 100 + (buttons.Length - 1) * 60 + 44;
+                           + RowHeight + 40 + (buttons.Length - 1) * 60 + 44;
 
             _spriteBatch.End();
             _graphics.ScissorRectangle = prevScissor;
@@ -538,7 +509,7 @@ namespace EcosystemSimulator.MonoGame
             _spriteBatch.Begin();
             string hint = _focusedField >= 0
                 ? "Type value · Enter/Tab next · Esc back · Scroll ↕"
-                : "Click a field or checkbox to interact · Scroll ↕ · Enter to select";
+                : "Click a field to interact · Scroll ↕ · Enter to select";
             var hintSize = _hintFont.MeasureString(hint);
             _spriteBatch.DrawString(_hintFont, hint,
                 new Vector2(screenW - hintSize.X - 20, screenH - 30), Color.Gray);

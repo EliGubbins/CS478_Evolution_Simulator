@@ -61,12 +61,12 @@ namespace EvolutionSimulator.MonoGameHost
         private bool _showDirectionVectors = true;
         private bool _showFieldOfViews = true;
         private bool _showBorderBox = true;
+        private bool _loopWhenExtinct = false;
 
         // Auto-reset tracking
         private float _emptyPopulationTimer = 0f;
         private bool _isEmptyPopulationPhase = false;
 
-        public string configPath;
         public string configPath = string.Empty;
         private SimulationParameters _activeParameters = new();
 
@@ -158,9 +158,7 @@ namespace EvolutionSimulator.MonoGameHost
                         _emptyPopulationTimer = 0f;
                         _isEmptyPopulationPhase = false;
                         
-                        // Set vision cone rendering based on menu checkbox
-                        if (renderer != null)
-                            renderer.DrawVisionCones = _mainMenu.Parameters.DrawVisionRadiusCones;
+               
                     }
                     else if (action == MenuAction.Quit)
                         Exit();
@@ -213,7 +211,7 @@ namespace EvolutionSimulator.MonoGameHost
                         _selectedOrganismId = null;
 
                     // Check for empty population and handle auto-reset if enabled
-                    if (_mainMenu.Parameters.LoopWhenLowOnOrganisms)
+                    if (_loopWhenExtinct)
                         HandleAutoReset(gameTime);
 
                     break;
@@ -438,6 +436,7 @@ namespace EvolutionSimulator.MonoGameHost
             Rectangle directionRect = GetToggleBounds(TopBarPadding + 16, "Direction Vectors");
             Rectangle fieldOfViewRect = GetToggleBounds(directionRect.Right + ToggleSpacing, "Field of Views");
             Rectangle borderRect = GetToggleBounds(fieldOfViewRect.Right + ToggleSpacing, "Border Box");
+            Rectangle loopRect = GetToggleBounds(borderRect.Right + ToggleSpacing, "Loop on Extinction");
 
             _uiSpriteBatch.Begin(blendState: BlendState.AlphaBlend);
 
@@ -445,6 +444,7 @@ namespace EvolutionSimulator.MonoGameHost
             DrawToggle(directionRect, "Direction Vectors", _showDirectionVectors);
             DrawToggle(fieldOfViewRect, "Field of Views", _showFieldOfViews);
             DrawToggle(borderRect, "Border Box", _showBorderBox);
+            DrawToggle(loopRect, "Loop on Extinction", _loopWhenExtinct);
 
             _uiSpriteBatch.End();
         }
@@ -485,6 +485,7 @@ namespace EvolutionSimulator.MonoGameHost
             Rectangle directionRect = GetToggleBounds(TopBarPadding + 16, "Direction Vectors");
             Rectangle fieldOfViewRect = GetToggleBounds(directionRect.Right + ToggleSpacing, "Field of Views");
             Rectangle borderRect = GetToggleBounds(fieldOfViewRect.Right + ToggleSpacing, "Border Box");
+            Rectangle loopRect = GetToggleBounds(borderRect.Right + ToggleSpacing, "Loop on Extinction");
             Point clickPoint = new(mouseX, mouseY);
 
             if (directionRect.Contains(clickPoint))
@@ -502,6 +503,12 @@ namespace EvolutionSimulator.MonoGameHost
             if (borderRect.Contains(clickPoint))
             {
                 _showBorderBox = !_showBorderBox;
+                return true;
+            }
+
+            if (loopRect.Contains(clickPoint))
+            {
+                _loopWhenExtinct = !_loopWhenExtinct;
                 return true;
             }
 
