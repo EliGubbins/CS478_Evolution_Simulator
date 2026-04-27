@@ -1,7 +1,9 @@
 # CS478_Evolution_Simulator
-Evolution Simulator for CS478 - Software Development
+### Evolution Simulator for CS478 - Software Development
 
- Team Name: The Better Team  
+A sophisticated ecosystem simulation project demonstrating evolutionary algorithms and behavioral adaptation in a .NET environment.
+
+ ### Team Name: The Better Team  
 
  Eli Gubbins  
 
