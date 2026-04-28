@@ -182,12 +182,7 @@ namespace EvolutionSimulator.MonoGameHost
                     }
                     if (IsSingleKeyPress(keyboardState, Keys.R))
                     {
-                        _selectedOrganismId = null;
-                        ApplySimulationParameters(_activeParameters);
-                        engine.Start();
-                        _mode = SimulationMode.Running;
-                        _emptyPopulationTimer = 0f;
-                        _isEmptyPopulationPhase = false;
+                        RestartSimulation();
                     }
                     if (IsSingleKeyPress(keyboardState, Keys.OemPlus) || IsSingleKeyPress(keyboardState, Keys.Add))
                         AdjustSimulationSpeed(SimulationTimeScaleStep);
@@ -292,17 +287,7 @@ namespace EvolutionSimulator.MonoGameHost
 
                 if (_emptyPopulationTimer >= EmptyPopulationResetDelaySeconds)
                 {
-                    _selectedOrganismId = null;
-                    engine.Stop();
-                    engine.Reset();
-                    engine.EnvironmentManager.MaxFoodCount = 180;
-                    engine.EnvironmentManager.DefaultFoodNutritionValue = 10f;
-                    engine.EnvironmentManager.FoodRegenerationRate = 8f;
-                    engine.EnvironmentManager.SeedInitialFood(100);
-                    engine.Start();
-                    _mode = SimulationMode.Running;
-                    _emptyPopulationTimer = 0f;
-                    _isEmptyPopulationPhase = false;
+                    RestartSimulation();
                 }
             }
             else
@@ -555,6 +540,16 @@ namespace EvolutionSimulator.MonoGameHost
         private void UpdateWindowTitle()
         {
             Window.Title = $"Evolution Simulator | Speed {simulationTimeScale:0.00}x | Space Pause | R Reset | +/- Speed | ESC Close & Save Metrics";
+        }
+
+        private void RestartSimulation()
+        {
+            _selectedOrganismId = null;
+            ApplySimulationParameters(_activeParameters);
+            engine.Start();
+            _mode = SimulationMode.Running;
+            _emptyPopulationTimer = 0f;
+            _isEmptyPopulationPhase = false;
         }
 
         private void ApplySimulationParameters(SimulationParameters parameters)
