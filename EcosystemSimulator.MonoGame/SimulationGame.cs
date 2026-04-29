@@ -58,7 +58,6 @@ namespace EvolutionSimulator.MonoGameHost
         private Texture2D? _panelTexture;
 
         private Guid? _selectedOrganismId;
-        private bool _showDirectionVectors = true;
         private bool _showFieldOfViews = true;
         private bool _showBorderBox = true;
         private bool _loopWhenExtinct = false;
@@ -71,6 +70,8 @@ namespace EvolutionSimulator.MonoGameHost
         private SimulationParameters _activeParameters = new();
 
         private readonly Random _random = new();
+        private enum OrganismDisplayMode { Circles, Sprites }
+        private OrganismDisplayMode _organismDisplayMode = OrganismDisplayMode.Circles;
 
         public SimulationGame()
         {
@@ -232,9 +233,10 @@ namespace EvolutionSimulator.MonoGameHost
             else
             {
                 SimulationRenderFrame frame = renderBridge.CreateFrame();
-                renderer.ShowDirectionIndicators = _showDirectionVectors;
+                renderer.ShowDirectionIndicators = _organismDisplayMode == OrganismDisplayMode.Circles;
                 renderer.ShowVisionCones = _showFieldOfViews;
                 renderer.ShowWorldBorder = _showBorderBox;
+                renderer.ShowSprites = _organismDisplayMode == OrganismDisplayMode.Sprites;
                 renderer.Render(frame, viewport);
                 DrawSimulationTopBar();
 
@@ -435,15 +437,15 @@ namespace EvolutionSimulator.MonoGameHost
                 GraphicsDevice.PresentationParameters.BackBufferWidth - (TopBarPadding * 2),
                 TopBarHeight);
 
-            Rectangle directionRect = GetToggleBounds(TopBarPadding + 16, "Direction Vectors");
-            Rectangle fieldOfViewRect = GetToggleBounds(directionRect.Right + ToggleSpacing, "Field of Views");
+            Rectangle organismModeRect = GetToggleBounds(TopBarPadding + 16, "Sprites");
+            Rectangle fieldOfViewRect = GetToggleBounds(organismModeRect.Right + ToggleSpacing, "Field of Views");
             Rectangle borderRect = GetToggleBounds(fieldOfViewRect.Right + ToggleSpacing, "Border Box");
             Rectangle loopRect = GetToggleBounds(borderRect.Right + ToggleSpacing, "Loop on Extinction");
 
             _uiSpriteBatch.Begin(blendState: BlendState.AlphaBlend);
 
             _uiSpriteBatch.Draw(_panelTexture, barRect, new Color(255, 255, 255, 220));
-            DrawToggle(directionRect, "Direction Vectors", _showDirectionVectors);
+            DrawToggle(organismModeRect, "Sprites", _organismDisplayMode == OrganismDisplayMode.Sprites);
             DrawToggle(fieldOfViewRect, "Field of Views", _showFieldOfViews);
             DrawToggle(borderRect, "Border Box", _showBorderBox);
             DrawToggle(loopRect, "Loop on Extinction", _loopWhenExtinct);
@@ -484,17 +486,12 @@ namespace EvolutionSimulator.MonoGameHost
 
         private bool HandleSimulationOverlayClick(int mouseX, int mouseY)
         {
-            Rectangle directionRect = GetToggleBounds(TopBarPadding + 16, "Direction Vectors");
-            Rectangle fieldOfViewRect = GetToggleBounds(directionRect.Right + ToggleSpacing, "Field of Views");
+            Rectangle organismModeRect = GetToggleBounds(TopBarPadding + 16, "Sprites");
+            Rectangle fieldOfViewRect = GetToggleBounds(organismModeRect.Right + ToggleSpacing, "Field of Views");
             Rectangle borderRect = GetToggleBounds(fieldOfViewRect.Right + ToggleSpacing, "Border Box");
             Rectangle loopRect = GetToggleBounds(borderRect.Right + ToggleSpacing, "Loop on Extinction");
             Point clickPoint = new(mouseX, mouseY);
 
-            if (directionRect.Contains(clickPoint))
-            {
-                _showDirectionVectors = !_showDirectionVectors;
-                return true;
-            }
 
             if (fieldOfViewRect.Contains(clickPoint))
             {
@@ -511,6 +508,20 @@ namespace EvolutionSimulator.MonoGameHost
             if (loopRect.Contains(clickPoint))
             {
                 _loopWhenExtinct = !_loopWhenExtinct;
+                return true;
+            }
+
+            if (organismModeRect.Contains(clickPoint))
+            {
+                _organismDisplayMode = _organismDisplayMode == OrganismDisplayMode.Circles
+                    ? OrganismDisplayMode.Sprites
+                    : OrganismDisplayMode.Circles;
+
+                if (renderer is not null)
+                {
+                    renderer.ShowSprites = _organismDisplayMode == OrganismDisplayMode.Sprites;
+                    renderer.ShowDirectionIndicators = _organismDisplayMode == OrganismDisplayMode.Circles;
+                }
                 return true;
             }
 
