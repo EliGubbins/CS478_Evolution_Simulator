@@ -70,6 +70,8 @@ namespace EvolutionSimulator.MonoGameHost
         public string configPath = string.Empty;
         private SimulationParameters _activeParameters = new();
 
+        private readonly Random _random = new();
+
         public SimulationGame()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -156,6 +158,7 @@ namespace EvolutionSimulator.MonoGameHost
                         engine.Start();
                         _mode = SimulationMode.Running;
                         _emptyPopulationTimer = 0f;
+                        SelectRandomOrganism();
                         _isEmptyPopulationPhase = false;
                         
                
@@ -203,7 +206,7 @@ namespace EvolutionSimulator.MonoGameHost
 
                     // Clear selection if the organism died
                     if (_selectedOrganismId.HasValue && FindOrganismById(_selectedOrganismId.Value) is null)
-                        _selectedOrganismId = null;
+                        SelectRandomOrganism();
 
                     // Check for empty population and handle auto-reset if enabled
                     if (_loopWhenExtinct)
@@ -297,6 +300,21 @@ namespace EvolutionSimulator.MonoGameHost
             }
         }
 
+        private void SelectRandomOrganism()
+        {
+            var living = engine.PopulationManager.GetAllLivingOrganisms().ToList();
+            if (living.Count == 0)
+            {
+                _selectedOrganismId = null;
+                _mode = engine.IsRunning ? SimulationMode.Running : SimulationMode.Paused;
+                return;
+            }
+
+            Organism chosen = living[_random.Next(living.Count)];
+            _selectedOrganismId = chosen.Id;
+            _mode = SimulationMode.Clicked;
+        }
+
         private void HandleOrganismClick(int screenX, int screenY)
         {
             float worldX = viewport.ToWorldX(screenX);
@@ -322,8 +340,7 @@ namespace EvolutionSimulator.MonoGameHost
             }
             else
             {
-                _selectedOrganismId = null;
-                _mode = engine.IsRunning ? SimulationMode.Running : SimulationMode.Paused;
+                SelectRandomOrganism();
             }
         }
 
