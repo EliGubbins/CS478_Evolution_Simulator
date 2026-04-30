@@ -18,6 +18,11 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
         public bool ShowVisionCones { get; set; } = true;
         public bool ShowWorldBorder { get; set; } = true;
 
+        private Texture2D? _preySprite;
+        private Texture2D? _predatorSprite;
+        private Texture2D? _foodSprite;
+        public bool ShowSprites { get; set; } = true;
+
         public MonoGameRenderFrameRenderer(GraphicsDevice graphicsDevice)
         {
             this.graphicsDevice = graphicsDevice;
@@ -30,6 +35,26 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
             filledCircleTexture = CreateCircleTexture(96, filled: true);
             ringTexture = CreateCircleTexture(96, filled: false);
             this.palette = palette;
+
+            _preySprite = TryLoadSprite("prey.png");
+            _predatorSprite = TryLoadSprite("predator.png");
+            _foodSprite = TryLoadSprite("food.png");
+        }
+
+        private Texture2D? TryLoadSprite(string filename)
+        {
+            try
+            {
+                string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", filename);
+                path = Path.GetFullPath(path);
+                using FileStream stream = File.OpenRead(path);
+                return Texture2D.FromStream(graphicsDevice, stream);
+            }
+            catch
+            {
+                // File not found or failed to load — fall back to circle rendering
+                return null;
+            }
         }
 
         public void Render(SimulationRenderFrame frame, WorldRenderViewport viewport)
@@ -62,6 +87,9 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
             pixelTexture?.Dispose();
             filledCircleTexture?.Dispose();
             ringTexture?.Dispose();
+            _preySprite?.Dispose();
+            _predatorSprite?.Dispose();
+            _foodSprite?.Dispose();
         }
 
         private void DrawTerrain(SimulationRenderFrame frame, WorldRenderViewport viewport)
@@ -255,8 +283,55 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
                     continue;
 
                 float radius = MathF.Max(0.8f, food.NutritionValue * 0.08f);
-                DrawCircle(food.X, food.Y, radius, palette.Food, viewport, filled: true);
+
+                if (ShowSprites && _foodSprite is not null)
+                {
+                    float screenX = viewport.ToScreenX(food.X);
+                    float screenY = viewport.ToScreenY(food.Y);
+                    float size = MathF.Max(6f, viewport.ToScreenSize(radius) * 2f);
+
+                    spriteBatch!.Draw(
+                        _foodSprite,
+                        new Vector2(screenX, screenY),
+                        null,
+                        Color.White,
+                        0f,
+                        new Vector2(_foodSprite.Width / 2f, _foodSprite.Height / 2f),
+                        new Vector2(size / _foodSprite.Width, size / _foodSprite.Height),
+                        SpriteEffects.None,
+                        0f);
+                }
+                else
+                {
+                    DrawCircle(food.X, food.Y, radius, palette.Food, viewport, filled: true);
+                }
             }
+        
+        }
+        private void DrawOrganismSprite(
+            OrganismRenderSnapshot organism,
+            Texture2D sprite,
+            WorldRenderViewport viewport)
+        {
+            float screenX = viewport.ToScreenX(organism.X);
+            float screenY = viewport.ToScreenY(organism.Y);
+            float size = MathF.Max(4f, viewport.ToScreenSize(organism.Radius) * 2f);
+
+            // Sprites are front-facing (pointing up), so we rotate to match movement direction
+            // atan2 gives us the movement angle; subtract PiOver2 to align a "up-facing" sprite
+            (float facingX, float facingY) = GetFacingVector(organism);
+            float angle = MathF.Atan2(facingY, facingX) - MathHelper.PiOver2;
+
+            spriteBatch!.Draw(
+                sprite,
+                new Vector2(screenX, screenY),
+                null,
+                Color.White, // no tint — use sprite's natural colors
+                angle,
+                new Vector2(sprite.Width / 2f, sprite.Height / 2f),
+                new Vector2(size / sprite.Width, size / sprite.Height),
+                SpriteEffects.None,
+                0f);
         }
 
         private void DrawOrganisms(SimulationRenderFrame frame, WorldRenderViewport viewport)
@@ -270,7 +345,6 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
                     ? palette.Predator
                     : palette.Prey;
 
-                // Draw vision cone if enabled
                 if (ShowVisionCones)
                 {
                     RenderColor visionColor = organism.Kind == RenderEntityKind.Predator
@@ -279,6 +353,20 @@ namespace EvolutionSimulator.MonoGameHost.Graphics
                     DrawVisionCone(organism, viewport, visionColor);
                 }
 
+                if (ShowSprites)
+                {
+                    Texture2D? sprite = organism.Kind == RenderEntityKind.Predator
+                        ? _predatorSprite
+                        : _preySprite;
+
+                    if (sprite is not null)
+                    {
+                        DrawOrganismSprite(organism, sprite, viewport);
+                        continue; // skip circle and direction indicator
+                    }
+                }
+
+                // Circle mode
                 DrawCircle(organism.X, organism.Y, organism.Radius, bodyColor, viewport, filled: true);
 
                 if (ShowDirectionIndicators)
